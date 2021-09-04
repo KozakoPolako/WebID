@@ -49,62 +49,21 @@ const server = (cb) => {
 
 
 const client = (cb) => {
-    browserSync.init({
-        server: {
-            baseDir: "./WebID_Client/dist"
-        },
-        notify: false,
-        host: "192.168.0.246",
-        port: 3000,
-        open: false
-    });
+
+    exec("npm run client_start");
     cb();
 }
 
-const css = () => {
-    return gulp.src("WebID_Client/src/scss/main.scss")
-        .pipe(sourcemaps.init())
-        .pipe(
-            sass({
-                outputStyle: "compressed"
-            }).on("error", sass.logError)
-        )
-        .pipe(autoprefixer())
-        .pipe(sourcemaps.write("."))
-        .pipe(gulp.dest("WebID_Client/dist/css"))
-        .pipe(browserSync.stream());
-}
-
-const js = (cb) => {
-    return webpack(require("./webpack.config.js"), (err, stats) => {
-        if (err)
-            throw err;
-        console.log(stats);
-        browserSync.reload();
-        cb();
-    });
-}
-
-const html = () =>{
-    return gulp.src("WebID_Client/src/**/*.html")
-        .pipe(gulp.dest("WebID_Client/dist/"))
-        
-    
-
-}
 
 const watch = (cb) => {
-    gulp.watch("WebID_Client/src/scss/**/*.scss",{usePolling:true}, gulp.series((css)));
-    gulp.watch("WebID_Client/src/js/**/*.js", gulp.series(js));
-    gulp.watch("WebID_Client/src/*.html", gulp.series(html));
+    
     gulp.watch("WebID_Server/**/*.js", gulp.series(server));
     cb();
 }
 
-exports.default = gulp.series(html,css,js,client,server,watch);
+exports.default = gulp.series(server,client,watch);
 
-exports.html = html;
-exports.css = css;
-exports.js = js;
+exports.client = client;
+exports.server = server;
 
 exports.watch = watch;

@@ -4,6 +4,7 @@
   "description": "Web application for obtaining and verifying identity documents",
   "main": "index.js",
   "scripts": {
+    "client_start":"start npm run --prefix webid_client serve",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
