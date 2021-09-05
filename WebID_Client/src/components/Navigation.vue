@@ -4,7 +4,7 @@
       app
       scroll-target=""
       flat
-      color="transparent"
+      color="green lighten-2"
       outlined
       dense
       >

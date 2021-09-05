@@ -1,14 +1,40 @@
 <template>
   <v-container>
-    <v-row>
-        <v-col xs="12" ld="6">
+    <v-row justify="center">
+        <v-col  xs="12" lg="4">
+            <v-file-input></v-file-input>
+        </v-col>
+        <v-col  xs="12" lg="2">
             <v-btn
+            block
             >
-            clickMe
+            1
             </v-btn>
+        </v-col>
+        <v-col  xs="12" lg="2">
             <v-btn
+            block
             >
-            clickM232
+            1
+            </v-btn>
+        </v-col>
+    </v-row>
+    <v-row justify="center">
+        <v-col  xs="12" lg="4">
+            <v-file-input></v-file-input>
+        </v-col>
+        <v-col  xs="12" lg="2">
+            <v-btn
+            block
+            >
+            1
+            </v-btn>
+        </v-col>
+        <v-col  xs="12" lg="2">
+            <v-btn
+            block
+            >
+            1
             </v-btn>
         </v-col>
     </v-row>
