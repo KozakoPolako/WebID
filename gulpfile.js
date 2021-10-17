@@ -12,36 +12,10 @@ let serverProcess = null;
 
 const server = (cb) => {
     
-    // if (serverProcess !== null) {
-    //     console.log("pid", serverProcess.pid);
-    //     //spawn("taskkill", ["/pid", serverProcess.pid, '/f', '/t']);
-    //     serverProcess.kill();
-    // }
-    
-    
-
-    // serverProcess = fork ("WebID_Server/app/app.js");
-
-    // // serverProcess = exec("node WebID_Server/app/app.js", (err, stdout, stderr) => {
-    // //     console.log(stdout);
-    // //     console.log(stderr);
-
-    // //     //cb(err);
-    // // });
-    // ///serverProcess = spawn ("start node WebID_Server/app/app.js")
-
-    // console.log(serverProcess.pid);
-
-    // return serverProcess;
-    // //  exec('mongod --dbpath ./data', function (err, stdout, stderr) {
-    // //     console.log(stdout);
-    // //     console.log(stderr);
-    // //     cb(err);
-    // //   });
     if (serverProcess) {
         serverProcess.stop();
     }
-    serverProcess = gls.new("./WebID_Server/app/app.js");
+    serverProcess = gls.new("./WebID_Server/app/server.js");
     serverProcess.start();
     cb();
 
@@ -64,6 +38,6 @@ const watch = (cb) => {
 exports.default = gulp.series(server,client,watch);
 
 exports.client = client;
-exports.server = server;
+exports.server = gulp.series(server, watch);
 
 exports.watch = watch;

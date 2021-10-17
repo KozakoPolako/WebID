@@ -8,20 +8,20 @@
       outlined
       dense
       >
-        <v-row>
+        <v-row align="center">
           <v-col md="2">
             <h1 class="white--text">WebID</h1>
           </v-col>
           <v-spacer></v-spacer>
           <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn fab text v-bind="attrs" v-on="on" color="white">
+              <v-btn fab small text v-bind="attrs" v-on="on" color="white">
                 <v-icon >mdi-account-outline</v-icon>
               </v-btn>
             </template>
             <v-card>
               <v-card-title primary-title>
-                Actions
+                Akcje:
               </v-card-title>
               <v-divider></v-divider>
               <v-card-text justify-center>
