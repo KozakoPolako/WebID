@@ -2,7 +2,7 @@ const express = require('express');
 const router =  express.Router();
 const multer = require('multer');
 
-const storeDir = './WebID_Server/test/'
+const storeDir = './test/'
 
 const storage = multer.diskStorage({
     destination(req, file, callback) {
@@ -40,7 +40,7 @@ router.get('/', (req, res, next) => {
 router.post('/pl/dowod', upload.single('dokumentImage'), (req, res, next) => {
     console.log(req.file);
     res.status(200).json({
-        message: 'dostałem post '
+        message: 'dostałem posta sd '
     });
 });
 

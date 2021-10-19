@@ -163,8 +163,9 @@ export default {
             const re = new RegExp(`([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(${acceptFileType.join('|')})$`, 'i');
             const InvalidTypeException = { };
             let test = true;
+            console.log("files: ",files);
             try {
-                files.forEach(val => {
+                [...files].forEach(val => {
                     if(!re.test(val.name)) {
                         InvalidTypeException["name"] = val.name;
                         throw InvalidTypeException ;
