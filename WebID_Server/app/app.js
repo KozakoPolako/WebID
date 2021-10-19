@@ -1,11 +1,10 @@
-var express = require('express');
-var app = express();
+const express = require('express');
+const cors = require('cors');
+const app = express();
 
-app.get('/', function(req, res){
-    //console.log(req);
-    console.log("jołł");
-   res.send("Hellos");
-});
+const dokuments = require ('./api/routes/dokuments')
 
-app.listen(8000);
-console.log("działadasdsadwdad");
+app.use(cors());
+app.use('/dokuments', dokuments);
+
+module.exports = app;
