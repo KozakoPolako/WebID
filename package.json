@@ -1,11 +1,14 @@
 {
   "name": "webid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Web application for obtaining and verifying identity documents",
-  "main": "index.js",
+  "main": "none",
   "scripts": {
-    "client_start": "start npm run --prefix webid_client serve",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "docker-compose up --build",
+    "run":  "docker-compose up",
+    "serve":"start npm run --prefix webid_server serve && npm run --prefix webid_client serve",
+    "wt-serve":"wt npm run --prefix webid_client serve && npm run --prefix webid_server serve" 
   },
   "repository": {
     "type": "git",
@@ -16,23 +19,5 @@
   "bugs": {
     "url": "https://github.com/KozakoPolako/WebID/issues"
   },
-  "homepage": "https://github.com/KozakoPolako/WebID#readme",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "multer": "^1.4.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.15.0",
-    "@babel/preset-env": "^7.15.0",
-    "babel-loader": "^8.2.2",
-    "browser-sync": "^2.27.5",
-    "gulp": "^4.0.2",
-    "gulp-autoprefixer": "^8.0.0",
-    "gulp-live-server": "0.0.31",
-    "gulp-sass": "^5.0.0",
-    "gulp-sourcemaps": "^3.0.0",
-    "sass": "^1.38.0",
-    "webpack": "^5.51.1"
-  }
+  "homepage": "https://github.com/KozakoPolako/WebID#readme"
 }

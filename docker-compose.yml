@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  webid-server:
+    container_name: webid-server
+    build: "./webid_server"
+    volumes:
+      - ./webid_server/src:/usr/src/app/src
+    ports:
+      - 3000:3000
+  webid-client:
+    container_name: webid-client
+    build: 
+      context: "./webid_client"
+      target: 'prod-stage'
+    volumes:
+      - ./webid_client/src:/app/src
+    ports:
+      - 8080:80
+    #command: /bin/sh -c "yarn serve"
+    depends_on:
+      - webid-server
