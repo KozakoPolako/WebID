@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "docker-compose up --build",
     "run":  "docker-compose up",
-    "serve":"start npm run --prefix webid_server serve && npm run --prefix webid_client serve",
+    "dev":"start npm run --prefix webid_server serve && npm run --prefix webid_client serve",
     "wt-serve":"wt npm run --prefix webid_client serve && npm run --prefix webid_server serve" 
   },
   "repository": {
