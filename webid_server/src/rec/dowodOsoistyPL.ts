@@ -1,6 +1,7 @@
+import { Multer } from "multer";
 import { createWorker } from "tesseract.js";
 
-const worker = createWorker();
+
 
 enum Sex {
   Man,
@@ -48,11 +49,23 @@ class DowodOsobistyPL {
     this.issueDate = issueDate;
     this.expiryDate = expiryDate;
   }
-  static getDocumentFromPhoto(front: File, back: File): DowodOsobistyPL {
-    const fr = front;
-    const bck = back;
-
-    console.log("front ", fr, "back ", bck);
+  static async getDocumentFromPhoto(front: string): Promise<DowodOsobistyPL> {
+    //console.log("front ", front, "back ", back);
+    try {
+      const worker = createWorker({
+        logger: (m) => console.log(m),
+      });
+      await worker.load();
+      await worker.loadLanguage("pol");
+      await worker.initialize("pol");
+      const {
+        data: { text },
+      } = await worker.recognize(front);
+      await worker.terminate();
+      console.log("Wynik: \n", text);
+    } catch (e) {
+      console.log(e);
+    }
 
     return new DowodOsobistyPL(
       "01",
@@ -70,3 +83,5 @@ class DowodOsobistyPL {
     );
   }
 }
+
+export default DowodOsobistyPL;
