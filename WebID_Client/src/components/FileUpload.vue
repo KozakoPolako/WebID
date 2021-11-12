@@ -40,7 +40,7 @@
                         <v-card outlined class="pa-1" color="grey lighten-1" @click.stop>
                             <v-row class="flex-no-wrap" >
                                 <v-col cols="10">
-                                    <h3 class="text-truncate text-start">{{file.name}}</h3> 
+                                    <h3 class="text-truncate text-start">{{filesLimit === 2 ? document[i] :"" }}{{file.name}}</h3> 
                                 </v-col>
                                 <v-spacer></v-spacer>
                                 <v-col cols="auto" justify="end" class="pr-3 pl-0">
@@ -66,6 +66,7 @@ export default {
     components: {},
     data: () => {
         return {
+            document: ["Przód: ","Tył: "],
             dropzone: null,
             fileInput: null,
             dragover: false,
@@ -86,6 +87,10 @@ export default {
         multiple: {
             type: Boolean,
             default: false,
+        },
+        filesLimit: {
+            type: Number,
+            default: 0,
         }
     },
     watch: {
@@ -181,8 +186,12 @@ export default {
             return test;
         },
         addUniqueFiles(files) {
+            
             const a = new Set(this.files.map(x => x.name));
             this.files = [...this.files, ...files.filter(x => !a.has(x.name))];
+            if (this.filesLimit && this.files.length > this.filesLimit) {
+                this.files.length = this.filesLimit;
+            }
         },
         clear(name) {
             this.files = this.files.filter(val => val.name !== name);

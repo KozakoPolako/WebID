@@ -1,9 +1,9 @@
 
 test
-
+webid_server/documentDestructor/output/*
 .DS_Store
 node_modules
-/dist
+dist
 
 
 # local env files
@@ -24,3 +24,5 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+webid_server/pol.traineddata
+webid_server/pl.traineddata
