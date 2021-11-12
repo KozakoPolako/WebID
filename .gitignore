@@ -1,6 +1,6 @@
 
 test
-
+webid_server/documentDestructor/output/*
 .DS_Store
 node_modules
 dist
