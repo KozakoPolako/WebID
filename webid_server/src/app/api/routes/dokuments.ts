@@ -1,4 +1,4 @@
-import express, { Router } from "express"
+import express, { Router, Request, Response } from "express"
 import multer from "multer"
 import DowodOsobistyPL from "../../../rec/dowodOsoistyPL";
 import fs from "fs";
@@ -25,7 +25,7 @@ const limits = (sizeMB:number) => {
 
 const upload = multer({
     storage: storage, 
-    limits: limits(6),
+    limits: limits(10),
     fileFilter: (req, file, callback) => {
         if(file.mimetype.split("/")[0] === 'image'){
             callback(null, true);
@@ -41,15 +41,16 @@ router.get('/', (req, res, next) => {
     });
 });
 
-router.post('/pl/dowod', upload.single('dokumentImage'), (req, res, next) => {
-    console.log(req.file);
-
-    if(req.file){
+router.post('/pl/dowod', upload.array('dowodImage',2) , (req, res, next) => {
+    console.log(req.files);
+    
+    if(req.files && req.files.length == 2){
         try {
+            var files = [];
+            var fileKeys = Object.keys(req.files);
             //const file = fs.readFileSync("D:\\OneDrive - Wojskowa Akademia Techniczna\\Obrazy\\Praca Inżynierska zdj\\Dowod-Osobisty-2015.jpg");
-            
-
-            const temp = DowodOsobistyPL.getDocumentFromPhoto(req.file.path);
+            // @ts-ignore 
+            const temp = DowodOsobistyPL.getDocumentFromPhoto(req.files[0].path, req.files[1].path); 
         }catch(e) {
             console.log(e);
         }

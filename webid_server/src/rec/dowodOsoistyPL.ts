@@ -1,5 +1,7 @@
 import { Multer } from "multer";
+import { spawn } from "child_process";
 import { createWorker } from "tesseract.js";
+import { destructDowod } from "./dowodDestructor"
 
 
 
@@ -49,20 +51,26 @@ class DowodOsobistyPL {
     this.issueDate = issueDate;
     this.expiryDate = expiryDate;
   }
-  static async getDocumentFromPhoto(front: string): Promise<DowodOsobistyPL> {
+  static async getDocumentFromPhoto(front: string, back: string): Promise<DowodOsobistyPL> {
     //console.log("front ", front, "back ", back);
     try {
-      const worker = createWorker({
-        logger: (m) => console.log(m),
-      });
-      await worker.load();
-      await worker.loadLanguage("pol");
-      await worker.initialize("pol");
-      const {
-        data: { text },
-      } = await worker.recognize(front);
-      await worker.terminate();
-      console.log("Wynik: \n", text);
+      console.log("file: ",front)
+      await destructDowod(front.toString(), "front")
+      await destructDowod(back, "back")
+      
+      console.log("test async")
+      
+      // const worker = createWorker({
+      //   logger: (m) => console.log(m),
+      // });
+      // await worker.load();
+      // await worker.loadLanguage("pol");
+      // await worker.initialize("pol");
+      // const {
+      //   data: { text },
+      // } = await worker.recognize(front);
+      // await worker.terminate();
+      // console.log("Wynik: \n", text);
     } catch (e) {
       console.log(e);
     }
