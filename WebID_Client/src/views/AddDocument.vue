@@ -10,6 +10,8 @@
       <h2>Prześlij zdjęcie {{ selTab ? "Paszportu" : "Dowodu" }}</h2>
       <file-upload
         v-model="uploadFile"
+        multiple
+        :filesLimit="2"
         acceptExtension=".jpg, .png"
       ></file-upload>
     </v-col>
@@ -70,13 +72,13 @@ export default {
   },
   computed: {
     isFileLoaded() {
-      return !this.uploadFile.length;
+      return ! (this.uploadFile.length === 2);
     },
   },
   methods: {
     ...mapActions(["uploadDowodToRecognize"]),
     uploadImage() {
-      this.uploadDowodToRecognize(this.uploadFile[0])
+      this.uploadDowodToRecognize(this.uploadFile)
         .then(() => {
           console.log("success");
         })
