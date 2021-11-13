@@ -7,6 +7,11 @@ import os
 
 pathImage = sys.argv[1]
 mode = sys.argv[2]
+
+# outputDir = "documentDestructor/output/"
+
+outputDir = "temporary/"
+
 dowodRatio = 85.6/53.98
 documentPos = []
 
@@ -72,11 +77,11 @@ def wrapTransform(cnt, img) :
   return wrap
 
 def cropFace(filename) : 
-  face = cv2.imread("documentDestructor/output/"+fileName+"/face.jpg")
+  face = cv2.imread(outputDir+fileName+"/face.jpg")
   [[[281, 141]],[[ 20, 141]],[[ 20, 475]],[[281, 475]]]
   cropedFace = face[141:475, 20:281]
-  cv2.imwrite("documentDestructor/output/"+fileName+"/face.jpg", cropedFace)
-print(pathImage)
+  cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
+
 img = cv2.imread(pathImage)
 ori = img.copy()
 imgContours = img
@@ -101,11 +106,12 @@ for thr1 in threshold1 :
 #documentPos = sorted(documentPos, key= cv2.contourArea, reverse= True) [:1]
 if len(documentPos) :
   fileName = (pathImage.split("/")[-1]).split(".")[0]
-  if not os.path.exists("documentDestructor/output/"+fileName) :
-    os.makedirs("documentDestructor/output/"+fileName)
+  fileName = (fileName.split("\\")[-1])
+  if not os.path.exists(outputDir+fileName) :
+    os.makedirs(outputDir+fileName)
   dowodContur = findDowod(documentPos, dowodRatio)
 
-
+  print("filename = "+fileName)
   #rysowanie wszystkich znalezionych prostokatow
 
   # for approx in documentPos :
@@ -146,7 +152,7 @@ if len(documentPos) :
     maskImg = cv2.imread("documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
     _, curMask = cv2.threshold(maskImg, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
     masked = cv2.bitwise_and(document, document,mask=curMask)
-    cv2.imwrite("documentDestructor/output/"+fileName + "/" + mask, masked)
+    cv2.imwrite(outputDir+fileName + "/" + mask, masked)
     print("DONE")
   if ( mode == "front" ) :
     cropFace(fileName)
