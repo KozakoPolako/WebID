@@ -4,7 +4,7 @@ webid_server/documentDestructor/output/*
 .DS_Store
 node_modules
 dist
-
+temporary
 
 # local env files
 .env.local
