@@ -15,6 +15,7 @@ interface Dowod {
   issueDate: string;
   issuingAuthority: string;
   expiryDate: string;
+  MRZ: string;
 }
 
 class DowodWorkers {
@@ -25,13 +26,13 @@ class DowodWorkers {
     this.prepareWorkers();
   }
   async prepareWorkers() {
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 15; i++) {
       this.workers[i] = createWorker({
         //logger: (m) => console.log("worker", i, ": ", m),
       });
     }
     await Promise.all(this.workers.map((val) => val.load()));
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 15; i++) {
       await this.workers[i].loadLanguage("pol");
       await this.workers[i].initialize("pol");
     }
@@ -52,6 +53,7 @@ class DowodWorkers {
       issueDate: "error",
       issuingAuthority: "error",
       expiryDate: "error",
+      MRZ: "error",
     };
 
     const Jobs = [
@@ -128,6 +130,147 @@ class DowodWorkers {
           reject(error);
         }
       }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[5].recognize(
+            "temporary/" + frontName.split(".")[0] + "/birthdate.jpg"
+          );
+          dowod.birthDate = text;
+          //await this.workers[4].terminate();
+          resolve("birthdateDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[6].recognize(
+            "temporary/" + frontName.split(".")[0] + "/parentsname.jpg"
+          );
+          dowod.parentsNames = text;
+          //await this.workers[4].terminate();
+          resolve("parentsnameDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[7].recognize(
+            "temporary/" + backName.split(".")[0] + "/birthplace.jpg"
+          );
+          dowod.birthPlace = text;
+          //await this.workers[4].terminate();
+          resolve("birthplaceDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[8].recognize(
+            "temporary/" + backName.split(".")[0] + "/expirydate.jpg"
+          );
+          dowod.expiryDate = text;
+          //await this.workers[4].terminate();
+          resolve("expirydateDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[9].recognize(
+            "temporary/" + backName.split(".")[0] + "/id.jpg"
+          );
+          dowod.id = text;
+          //await this.workers[4].terminate();
+          resolve("idDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[10].recognize(
+            "temporary/" + backName.split(".")[0] + "/inssuingauthority.jpg"
+          );
+          dowod.issuingAuthority = text;
+          //await this.workers[4].terminate();
+          resolve("inssuingauthorityDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[11].recognize(
+            "temporary/" + backName.split(".")[0] + "/issuedate.jpg"
+          );
+          dowod.issueDate = text;
+          //await this.workers[4].terminate();
+          resolve("issuedateDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[12].recognize(
+            "temporary/" + backName.split(".")[0] + "/MRZ.jpg"
+          );
+          dowod.MRZ = text;
+          //await this.workers[4].terminate();
+          resolve("MRZDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[13].recognize(
+            "temporary/" + backName.split(".")[0] + "/nationality.jpg"
+          );
+          dowod.nationality = text;
+          //await this.workers[4].terminate();
+          resolve("nationalityDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      new Promise(async (resolve, reject) => {
+        try {
+          const {
+            data: { text },
+          } = await this.workers[14].recognize(
+            "temporary/" + backName.split(".")[0] + "/pesel.jpg"
+          );
+          dowod.pesel = text;
+          //await this.workers[4].terminate();
+          resolve("peselDone");
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      
     ];
     try {
       console.log("workers work:dwdawdwa")

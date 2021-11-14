@@ -73,6 +73,7 @@ class DowodOsobistyPL {
     let issueDate: string = "error";
     let issuingAuthority: string = "error";
     let expiryDate: string = "error";
+    let MRZ :string = "error"
     try {
       console.log("file: ", front);
       await destructDowod(front.toString(), "front");
@@ -86,10 +87,16 @@ class DowodOsobistyPL {
       console.log("test async", frontName, " ", backName);
       const dowod = await Workers.recogniseDowod(frontName,backName);
       console.log();
-      console.log("names : " + dowod.names);
-      console.log("surname : " + dowod.surname);
-      console.log("familiname : " + dowod.familyName);
-      console.log("sex : " + dowod.sex);
+
+      for (const key in dowod) {
+        // @ts-ignore
+        console.log(`${key}: \n ${dowod[key]}`) 
+      }
+      // console.log("names : " + dowod.names);
+      // console.log("surname : " + dowod.surname);
+      // console.log("familiname : " + dowod.familyName);
+      // console.log("sex : " + dowod.sex);
+      // console.log()
         
       
     } catch (e) {
