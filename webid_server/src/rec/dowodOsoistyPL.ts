@@ -96,7 +96,7 @@ class DowodOsobistyPL {
       // console.log("surname : " + dowod.surname);
       // console.log("familiname : " + dowod.familyName);
       // console.log("sex : " + dowod.sex);
-      // console.log()
+      // console.log() 
         
       
     } catch (e) {
