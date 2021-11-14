@@ -152,6 +152,14 @@ if len(documentPos) :
     maskImg = cv2.imread("documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
     _, curMask = cv2.threshold(maskImg, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
     masked = cv2.bitwise_and(document, document,mask=curMask)
+    masked = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
+    if mask != "face.jpg":
+      masked = cv2.GaussianBlur(masked,(5,5),0)
+      masked = cv2.adaptiveThreshold(masked, 255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,19,14)
+      masked = cv2.dilate(masked, (3,3), iterations=3)
+      masked = cv2.erode(masked, (3,3), iterations=1)
+    #binaryzacja
+
     cv2.imwrite(outputDir+fileName + "/" + mask, masked)
     print("DONE")
   if ( mode == "front" ) :
