@@ -19,7 +19,6 @@ threshold1 = [ 60, 150, 225 ]
 threshold2 = [ 30, 120, 200 ]
 
 
-
 # znajdowanie prostokata najbardziej przypominającego dowod
 def findDowod(rectsArray, targetRatio) :
   bestRect = rectsArray[0]
@@ -141,7 +140,7 @@ if len(documentPos) :
 
   print(mode)
   # Wyznaczanie rozmiaru maski oraz zmiana rozmiaru dokumentu
-  maskShape = cv2.imread("documentDestructor/masks/"+mode+"/shape.jpg", cv2.IMREAD_GRAYSCALE)
+  maskShape = cv2.imread("src/documentDestructor/masks/"+mode+"/shape.jpg", cv2.IMREAD_GRAYSCALE)
   msH = maskShape.shape[0]
   msW = maskShape.shape[1]
 
@@ -149,7 +148,7 @@ if len(documentPos) :
 
   for mask in current:
     print(mask)
-    maskImg = cv2.imread("documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
+    maskImg = cv2.imread("src/documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
     _, curMask = cv2.threshold(maskImg, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
     masked = cv2.bitwise_and(document, document,mask=curMask)
     masked = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)

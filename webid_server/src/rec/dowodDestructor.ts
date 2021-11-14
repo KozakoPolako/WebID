@@ -3,8 +3,8 @@ import { Console } from "console";
 
 export  async function destructDowod(filepath: string, side: string): Promise<void> {
   return new Promise ((resolve, reject) => {
-    const python = spawn("python", [
-      "documentDestructor/start.py",
+    const python = spawn("python3", [
+      "src/documentDestructor/start.py",
       filepath,
       side,
     ]);

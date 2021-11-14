@@ -4,6 +4,7 @@ import Tesseract, { createWorker } from "tesseract.js";
 import { destructDowod } from "./dowodDestructor";
 import { performance } from "perf_hooks"
 import dowodOsobistyWorkers from "./dowodOsobistyWorkers";
+import path from "path";
 
 enum Sex {
   Man,
@@ -77,17 +78,20 @@ class DowodOsobistyPL {
       await destructDowod(front.toString(), "front");
       await destructDowod(back, "back");
 
-      const frontName = front.split("\\")[1];
-      const backName = back.split("\\")[1];
+
+      const frontName = path.basename(front);
+      const backName = path.basename(back);
+      
 
       console.log("test async", frontName, " ", backName);
-
       const dowod = await Workers.recogniseDowod(frontName,backName);
       console.log();
       console.log("names : " + dowod.names);
       console.log("surname : " + dowod.surname);
       console.log("familiname : " + dowod.familyName);
       console.log("sex : " + dowod.sex);
+        
+      
     } catch (e) {
       console.log(e);
     }
