@@ -20,9 +20,9 @@ interface Dowod {
 
 class DowodWorkers {
   workers: Tesseract.Worker[] = [];
+  dateRegex = /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )(((0)[0-9])|((1)[0-2]))(\/|\.|\-|\ )\d{4}/
 
   constructor() {
-    console.log("constructor");
     this.prepareWorkers();
   }
   async prepareWorkers() {
@@ -137,7 +137,8 @@ class DowodWorkers {
           } = await this.workers[5].recognize(
             "temporary/" + frontName.split(".")[0] + "/birthdate.jpg"
           );
-          dowod.birthDate = text;
+          const temp = text.match(this.dateRegex)
+          dowod.birthDate = temp ? temp[0] : "";
           //await this.workers[4].terminate();
           resolve("birthdateDone");
         } catch (error) {
@@ -179,7 +180,10 @@ class DowodWorkers {
           } = await this.workers[8].recognize(
             "temporary/" + backName.split(".")[0] + "/expirydate.jpg"
           );
-          dowod.expiryDate = text;
+          console.log("date: ", text)
+          console.log("match: ", text.match(this.dateRegex))
+          const temp = text.match(this.dateRegex)
+          dowod.expiryDate = temp ? temp[0] : "";
           //await this.workers[4].terminate();
           resolve("expirydateDone");
         } catch (error) {
@@ -221,7 +225,8 @@ class DowodWorkers {
           } = await this.workers[11].recognize(
             "temporary/" + backName.split(".")[0] + "/issuedate.jpg"
           );
-          dowod.issueDate = text;
+          const temp = text.match(this.dateRegex)
+          dowod.issueDate = temp? temp[0] : "";
           //await this.workers[4].terminate();
           resolve("issuedateDone");
         } catch (error) {

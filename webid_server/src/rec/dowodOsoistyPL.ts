@@ -86,18 +86,24 @@ class DowodOsobistyPL {
 
       console.log("test async", frontName, " ", backName);
       const dowod = await Workers.recogniseDowod(frontName,backName);
-      console.log();
+
+      
 
       for (const key in dowod) {
         // @ts-ignore
         console.log(`${key}: \n ${dowod[key]}`) 
       }
+
       // console.log("names : " + dowod.names);
       // console.log("surname : " + dowod.surname);
       // console.log("familiname : " + dowod.familyName);
       // console.log("sex : " + dowod.sex);
       // console.log()
-        
+
+      console.log("daty : ");
+      console.log(`birthdate ${dowod.birthDate.replace(/\./g, ' ')} : ${new Date (dowod.birthDate.replace(/\./g,' '))}`)
+      console.log(`issuingDate ${dowod.issueDate.replace(/\./g, ' ')} : ${new Date (dowod.issueDate.replace(/\./g,' '))}`)
+      console.log(`expiryDate ${dowod.expiryDate.replace(/\./g, ' ')} : ${new Date (dowod.expiryDate.replace(/\./g,' '))}`)
       
     } catch (e) {
       console.log(e);
@@ -105,6 +111,7 @@ class DowodOsobistyPL {
     
     const end  = performance.now() 
     console.log(`Rozpoznawanie trwało:  ${(end - start)/1000} s`);
+
     return new DowodOsobistyPL(
       "01",
       surname,
