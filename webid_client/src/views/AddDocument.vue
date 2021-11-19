@@ -22,6 +22,7 @@
           text
           width="250"
           color="green lighten-2"
+          :loading="recLoading"
           @click="uploadImage"
         >
           Pobierz dane ze zdjęcia
@@ -63,6 +64,7 @@ export default {
   components: { FileUpload, DowodForm, PaszportForm },
   data() {
     return {
+      recLoading: false,
       uploadFile: [],
       showForm: false,
       tabs: ["Dowód osobisty", "Paszport"],
@@ -78,13 +80,17 @@ export default {
   methods: {
     ...mapActions(["uploadDowodToRecognize"]),
     uploadImage() {
+      this.recLoading = true
       this.uploadDowodToRecognize(this.uploadFile)
         .then(() => {
           console.log("success");
         })
         .catch((error) => {
           console.log("error", error);
-        });
+        })
+        .finally(() => {
+          this.recLoading = false;
+        })
     },
   },
   updated() {

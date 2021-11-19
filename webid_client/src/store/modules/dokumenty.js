@@ -16,6 +16,7 @@ const actions = {
                 'Content-Type': 'multipart/form-data'
             },
         });
+        console.log("responce :", response)
         commit("uploadDowod",response);
     }
 }
