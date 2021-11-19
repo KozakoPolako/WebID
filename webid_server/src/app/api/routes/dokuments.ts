@@ -3,7 +3,11 @@ import multer from "multer"
 import DowodOsobistyPL from "../../../rec/dowodOsoistyPL";
 import fs from "fs";
 
+
+
 const router = express.Router();
+
+const adress = "http://localhost:3000"
 
 const storageDir = "./test/";
 
@@ -41,8 +45,8 @@ router.get('/', (req, res, next) => {
     });
 });
 
-router.post('/pl/dowod', upload.array('dowodImage',2) , (req, res, next) => {
-    console.log(req.files);
+router.post('/pl/dowod', upload.array('dowodImage',2) , async (req, res, next) => {
+    //console.log(req.files);
     
     if(req.files && req.files.length == 2){
         try {
@@ -50,9 +54,20 @@ router.post('/pl/dowod', upload.array('dowodImage',2) , (req, res, next) => {
             var fileKeys = Object.keys(req.files);
             //const file = fs.readFileSync("D:\\OneDrive - Wojskowa Akademia Techniczna\\Obrazy\\Praca Inżynierska zdj\\Dowod-Osobisty-2015.jpg");
             // @ts-ignore 
-            const temp = DowodOsobistyPL.getDocumentFromPhoto(req.files[0].path, req.files[1].path); 
+            const temp = await DowodOsobistyPL.getDocumentFromPhoto(req.files[0].path, req.files[1].path); 
+            console.log("Skończyłem")
+            console.dir(temp)
+            // @ts-ignore
+            const filename = req.files[0].filename
+            res.status(200).json({
+                dowod: temp,
+                faceURL: `${adress}/temporary/${filename}/face.jpg`
+            })
         }catch(e) {
             console.log(e);
+            res.status(404).json({
+                message: 'Nie udało się odczytać danych ze zdjęcia'
+            });
         }
         
 
@@ -60,9 +75,7 @@ router.post('/pl/dowod', upload.array('dowodImage',2) , (req, res, next) => {
     }
         
 
-    res.status(200).json({
-        message: 'dostałem posta'
-    });
+    
 });
 
 export default router;
