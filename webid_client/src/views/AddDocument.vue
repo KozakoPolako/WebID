@@ -84,6 +84,7 @@ export default {
       this.uploadDowodToRecognize(this.uploadFile)
         .then(() => {
           console.log("success");
+          this.showForm = true;
         })
         .catch((error) => {
           console.log("error", error);
@@ -92,9 +93,6 @@ export default {
           this.recLoading = false;
         })
     },
-  },
-  updated() {
-    console.log("dokumenty", this.uploadFile);
   },
 };
 </script>
