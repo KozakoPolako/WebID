@@ -1,6 +1,7 @@
 import express, { Router, Request, Response } from "express"
 import multer from "multer"
 import DowodOsobistyPL from "../../../rec/dowodOsoistyPL";
+import mkdirp from "mkdirp";
 import fs from "fs";
 
 
@@ -11,9 +12,18 @@ const adress = "http://localhost:3000"
 
 const storageDir = "./test/";
 
-const storage = multer .diskStorage({
-    destination(req,file,callback) {
-        callback(null,storageDir);
+const storage = multer.diskStorage({
+    async destination(req,file,callback) {
+
+        let dir = storageDir;
+        try {
+           await mkdirp(dir) 
+           callback(null,dir)
+        }catch {
+
+            callback(new Error("Nie udało się utworzyć pliku"),dir)
+        }
+        
     },
     filename(req,file,callback) {
         callback(null, Date.now() + file.originalname)
@@ -61,7 +71,7 @@ router.post('/pl/dowod', upload.array('dowodImage',2) , async (req, res, next) =
             const filename = req.files[0].filename
             res.status(200).json({
                 dowod: temp,
-                faceURL: `${adress}/temporary/${filename}/face.jpg`
+                faceURL: `${adress}/${filename.split('.')[0]}/face.jpg`
             })
         }catch(e) {
             console.log(e);
