@@ -5,6 +5,7 @@ webid_server/documentDestructor/output/*
 node_modules
 dist
 temporary
+webid_db/db
 
 # local env files
 .env.local

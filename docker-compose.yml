@@ -1,8 +1,30 @@
 version: "3"
 
 services:
+  webid-db:
+    container_name: webid-db
+    networks:
+      - backend
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${WEBID_MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${WEBID_MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=WebID_DB
+    volumes:
+      - ./webid_db/db:/data/db
+    ports:
+      - 2717:27017
+    command: --quiet --logpath /data/db/logs
+    
   webid-server:
     container_name: webid-server
+    networks:
+      - frontend
+      - backend
+    environment:
+      - MONGO_LOGIN=${WEBID_MONGO_USERNAME}
+      - MOngo_PASSWORD=${WEBID_MONGO_PASSWORD}
     build: 
       context: "./webid_server"
       target: "dev-stage"
@@ -10,8 +32,12 @@ services:
       - ./webid_server/src:/usr/src/app/src
     ports:
       - 3000:3000
+    depends_on:
+      - webid-db
   webid-client:
     container_name: webid-client
+    networks:
+      - frontend
     build: 
       context: "./webid_client"
       target: 'dev-stage'
@@ -22,3 +48,6 @@ services:
     #command: /bin/sh -c "yarn serve"
     depends_on:
       - webid-server
+networks:
+  frontend:
+  backend:
