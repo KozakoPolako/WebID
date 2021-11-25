@@ -1,5 +1,5 @@
 #develop stage
-FROM node:14 as dev-stage
+FROM node:14 as init
 
 WORKDIR /app
 
@@ -9,8 +9,12 @@ RUN yarn install
 
 COPY . .
 
+#dev-stage
+FROM init as dev-stage
+CMD ["npm","run","serve"]
+
 #build stage
-FROM dev-stage as build-stage
+FROM prepere-stage as build-stage
 RUN yarn build
 
 #production stage

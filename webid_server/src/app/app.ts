@@ -5,6 +5,7 @@ import dokuments from "./api/routes/dokuments";
 const app: Application = express();
 
 app.use(cors());
+app.use(express.static('temporary/'))
 app.use("/dokuments", dokuments);
 
 export default app;

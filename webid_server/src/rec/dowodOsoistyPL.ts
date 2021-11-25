@@ -1,20 +1,22 @@
 import { Multer } from "multer";
 import { spawn } from "child_process";
-import { createWorker } from "tesseract.js";
-import { destructDowod } from "./dowodDestructor"
-
-
+import Tesseract, { createWorker } from "tesseract.js";
+import { destructDowod } from "./dowodDestructor";
+import { performance } from "perf_hooks"
+import dowodOsobistyWorkers, { Dowod } from "./dowodOsobistyWorkers";
+import path from "path";
 
 enum Sex {
   Man,
   Woman,
 }
-
+const Workers = new dowodOsobistyWorkers(); 
 class DowodOsobistyPL {
   id: string;
   surname: string;
   names: string[];
   parentsNames: string[];
+  familyName: string;
   birthDate: Date;
   sex: Sex;
   pesel: number;
@@ -29,6 +31,7 @@ class DowodOsobistyPL {
     surname: string,
     names: string[],
     parentsNames: string[],
+    familyName: string,
     birthDate: Date,
     sex: Sex,
     pesel: number,
@@ -42,6 +45,7 @@ class DowodOsobistyPL {
     this.surname = surname;
     this.names = names;
     this.parentsNames = parentsNames;
+    this.familyName = familyName;
     this.birthDate = birthDate;
     this.sex = sex;
     this.pesel = pesel;
@@ -51,44 +55,54 @@ class DowodOsobistyPL {
     this.issueDate = issueDate;
     this.expiryDate = expiryDate;
   }
-  static async getDocumentFromPhoto(front: string, back: string): Promise<DowodOsobistyPL> {
-    //console.log("front ", front, "back ", back);
+  static async getDocumentFromPhoto(
+    front: string,
+    back: string
+  ): Promise<Dowod> {
+    const start = performance.now() 
+    // let names: string = "error";
+    // let surname: string = "error";
+    // let parentsNames: string = "error";
+    // let birthDate: string = "error";
+    // let familyName: string = "error";
+    // let sex: string = "error";
+    // let id: string = "error";
+    // let pesel: string = "error";
+    // let nationality: string = "error";
+    // let birthPlace: string = "error";
+    // let issueDate: string = "error";
+    // let issuingAuthority: string = "error";
+    // let expiryDate: string = "error";
+    // let MRZ :string = "error"
     try {
-      console.log("file: ",front)
-      await destructDowod(front.toString(), "front")
-      await destructDowod(back, "back")
+      await destructDowod(front.toString(), "front", false);
+      await destructDowod(back, "back", false);
+
+
+      const frontName = path.basename(front);
+      const backName = path.basename(back);
       
-      console.log("test async")
+
+      const dowod = await Workers.recogniseDowod(frontName,backName);
+
       
-      // const worker = createWorker({
-      //   logger: (m) => console.log(m),
-      // });
-      // await worker.load();
-      // await worker.loadLanguage("pol");
-      // await worker.initialize("pol");
-      // const {
-      //   data: { text },
-      // } = await worker.recognize(front);
-      // await worker.terminate();
-      // console.log("Wynik: \n", text);
+
+      // for (const key in dowod) {
+      //   // @ts-ignore
+      //   console.log(`${key}: \n ${dowod[key]}`) 
+      // }
+
+      return dowod
     } catch (e) {
       console.log(e);
+      throw new Error(e+'');
+    } finally {
+      const end  = performance.now() 
+      console.log(`Rozpoznawanie trwało:  ${(end - start)/1000} s`);
     }
-
-    return new DowodOsobistyPL(
-      "01",
-      "Dąbrowksi",
-      ["Dariusz", "Józef"],
-      ["Kazimierz", "Małgorzata"],
-      new Date(1998, 3, 19),
-      Sex.Man,
-      90233483353,
-      "POLSKIE",
-      "Warszawa",
-      "PREZYDENT M.ST. WARSZAWY",
-      new Date(2016, 6, 10),
-      new Date(2026, 6, 10)
-    );
+    
+    
+    
   }
 }
 

@@ -7,12 +7,16 @@ import os
 
 pathImage = sys.argv[1]
 mode = sys.argv[2]
+
+# outputDir = "documentDestructor/output/"
+
+outputDir = "temporary/"
+
 dowodRatio = 85.6/53.98
 documentPos = []
 
 threshold1 = [ 60, 150, 225 ]
 threshold2 = [ 30, 120, 200 ]
-
 
 
 # znajdowanie prostokata najbardziej przypominającego dowod
@@ -72,11 +76,11 @@ def wrapTransform(cnt, img) :
   return wrap
 
 def cropFace(filename) : 
-  face = cv2.imread("documentDestructor/output/"+fileName+"/face.jpg")
+  face = cv2.imread(outputDir+fileName+"/face.jpg")
   [[[281, 141]],[[ 20, 141]],[[ 20, 475]],[[281, 475]]]
   cropedFace = face[141:475, 20:281]
-  cv2.imwrite("documentDestructor/output/"+fileName+"/face.jpg", cropedFace)
-print(pathImage)
+  cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
+
 img = cv2.imread(pathImage)
 ori = img.copy()
 imgContours = img
@@ -101,11 +105,12 @@ for thr1 in threshold1 :
 #documentPos = sorted(documentPos, key= cv2.contourArea, reverse= True) [:1]
 if len(documentPos) :
   fileName = (pathImage.split("/")[-1]).split(".")[0]
-  if not os.path.exists("documentDestructor/output/"+fileName) :
-    os.makedirs("documentDestructor/output/"+fileName)
+  fileName = (fileName.split("\\")[-1])
+  if not os.path.exists(outputDir+fileName) :
+    os.makedirs(outputDir+fileName)
   dowodContur = findDowod(documentPos, dowodRatio)
 
-
+  print("filename = "+fileName)
   #rysowanie wszystkich znalezionych prostokatow
 
   # for approx in documentPos :
@@ -135,7 +140,7 @@ if len(documentPos) :
 
   print(mode)
   # Wyznaczanie rozmiaru maski oraz zmiana rozmiaru dokumentu
-  maskShape = cv2.imread("documentDestructor/masks/"+mode+"/shape.jpg", cv2.IMREAD_GRAYSCALE)
+  maskShape = cv2.imread("src/documentDestructor/masks/"+mode+"/shape.jpg", cv2.IMREAD_GRAYSCALE)
   msH = maskShape.shape[0]
   msW = maskShape.shape[1]
 
@@ -143,10 +148,18 @@ if len(documentPos) :
 
   for mask in current:
     print(mask)
-    maskImg = cv2.imread("documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
+    maskImg = cv2.imread("src/documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
     _, curMask = cv2.threshold(maskImg, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
     masked = cv2.bitwise_and(document, document,mask=curMask)
-    cv2.imwrite("documentDestructor/output/"+fileName + "/" + mask, masked)
+    masked = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
+    if mask != "face.jpg":
+      masked = cv2.GaussianBlur(masked,(5,5),0)
+      masked = cv2.adaptiveThreshold(masked, 255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,19,14)
+      masked = cv2.dilate(masked, (3,3), iterations=3)
+      masked = cv2.erode(masked, (3,3), iterations=1)
+    #binaryzacja
+
+    cv2.imwrite(outputDir+fileName + "/" + mask, masked)
     print("DONE")
   if ( mode == "front" ) :
     cropFace(fileName)
