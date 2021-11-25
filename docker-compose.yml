@@ -24,7 +24,7 @@ services:
       - backend
     environment:
       - MONGO_LOGIN=${WEBID_MONGO_USERNAME}
-      - MOngo_PASSWORD=${WEBID_MONGO_PASSWORD}
+      - MONGO_PASSWORD=${WEBID_MONGO_PASSWORD}
     build: 
       context: "./webid_server"
       target: "dev-stage"

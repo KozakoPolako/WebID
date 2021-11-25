@@ -3,6 +3,7 @@ import multer from "multer"
 import DowodOsobistyPL from "../../../rec/dowodOsoistyPL";
 import mkdirp from "mkdirp";
 import fs from "fs";
+import { mongoController } from "../../app"
 
 
 
@@ -69,6 +70,7 @@ router.post('/pl/dowod', upload.array('dowodImage',2) , async (req, res, next) =
             console.dir(temp)
             // @ts-ignore
             const filename = req.files[0].filename
+            console.log(mongoController.insertDocument(temp))
             res.status(200).json({
                 dowod: temp,
                 faceURL: `${adress}/${filename.split('.')[0]}/face.jpg`
