@@ -69,11 +69,14 @@ router.post('/pl/dowod', upload.array('dowodImage',2) , async (req, res, next) =
             console.log("Skończyłem")
             console.dir(temp)
             // @ts-ignore
-            const filename = req.files[0].filename
-            console.log(mongoController.insertDocument(temp))
+            const frontfilename = req.files[0].filename.split('.')[0]
+            // @ts-ignore
+            const backfilename = req.files[1].filename.split('.')[0]
+            
+            console.log( await mongoController.insertDocument(temp, frontfilename,backfilename))
             res.status(200).json({
                 dowod: temp,
-                faceURL: `${adress}/${filename.split('.')[0]}/face.jpg`
+                faceURL: `${adress}/${frontfilename}/face.jpg`
             })
         }catch(e) {
             console.log(e);

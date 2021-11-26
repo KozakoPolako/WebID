@@ -146,6 +146,8 @@ if len(documentPos) :
 
   document = cv2.resize(document, (msW, msH), interpolation=cv2.INTER_AREA)
 
+  cv2.imwrite(outputDir+fileName + "/"+ "document.jpg", document)
+
   for mask in current:
     print(mask)
     maskImg = cv2.imread("src/documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
