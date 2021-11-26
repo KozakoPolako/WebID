@@ -83,9 +83,6 @@ class Mongo {
           reject(error)
         })
       })
-      // stream.on("end", () => {
-      //   resolve(file)
-      // })
       stream.on("error", (error) => {
         reject(error)
       })
