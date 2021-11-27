@@ -3,8 +3,25 @@ import { spawn } from "child_process";
 import Tesseract, { createWorker } from "tesseract.js";
 import { destructDowod } from "./dowodDestructor";
 import { performance } from "perf_hooks"
-import dowodOsobistyWorkers, { Dowod } from "./dowodOsobistyWorkers";
+import dowodOsobistyWorkers from "./dowodOsobistyWorkers";
 import path from "path";
+
+export interface Dowod {
+  names: string;
+  surname: string;
+  parentsNames: string;
+  birthDate: string;
+  familyName: string;
+  sex: string;
+  id: string;
+  pesel: string;
+  nationality: string;
+  birthPlace: string;
+  issueDate: string;
+  issuingAuthority: string;
+  expiryDate: string;
+  MRZ: string;
+}
 
 enum Sex {
   Man,

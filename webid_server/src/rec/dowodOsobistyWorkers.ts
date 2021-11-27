@@ -1,22 +1,7 @@
 import Tesseract, { createWorker } from "tesseract.js";
-import DowodOsobistyPL from "./dowodOsoistyPL";
+import { Dowod } from "./dowodOsoistyPL";
 
-export interface Dowod {
-  names: string;
-  surname: string;
-  parentsNames: string;
-  birthDate: string;
-  familyName: string;
-  sex: string;
-  id: string;
-  pesel: string;
-  nationality: string;
-  birthPlace: string;
-  issueDate: string;
-  issuingAuthority: string;
-  expiryDate: string;
-  MRZ: string;
-}
+
 
 class DowodWorkers {
   workers: Tesseract.Worker[] = [];
