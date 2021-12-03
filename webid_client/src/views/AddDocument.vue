@@ -13,6 +13,7 @@
         multiple
         :filesLimit="2"
         acceptExtension=".jpg, .png"
+        class="mt-4"
       ></file-upload>
     </v-col>
     <v-col>
@@ -74,13 +75,13 @@ export default {
   },
   computed: {
     isFileLoaded() {
-      return ! (this.uploadFile.length === 2);
+      return !(this.uploadFile.length === 2);
     },
   },
   methods: {
     ...mapActions(["uploadDowodToRecognize"]),
     uploadImage() {
-      this.recLoading = true
+      this.recLoading = true;
       this.uploadDowodToRecognize(this.uploadFile)
         .then(() => {
           console.log("success");
@@ -91,7 +92,7 @@ export default {
         })
         .finally(() => {
           this.recLoading = false;
-        })
+        });
     },
   },
 };

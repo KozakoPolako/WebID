@@ -1,10 +1,22 @@
 <template>
-  <v-form>
+  <v-form v-model="valid" ref="dowodForm" lazy-validation :readonly="readonly">
     <v-row class="d-flex" justify="center">
       <v-col cols="12" lg="9" xl="7">
+        <v-row justify="center">
+          <v-col cols="12" md="6">
+            <v-card max-width="650" class="mx-auto">
+              <v-img :src="front" max-width="650" />
+            </v-card>
+          </v-col>
+          <v-col cols="12" md="6" align-self="center">
+            <v-card max-width="650" class="mx-auto">
+              <v-img :src="back" />
+            </v-card>
+          </v-col>
+        </v-row>
         <v-row justify="center" class="mb-10">
           <v-card class="mb-5" justify="center" width="280" elevation="10">
-            <v-img :src="face" width="280" height="360"> </v-img>
+            <v-img :src="face" width="280" height="360" />
           </v-card>
         </v-row>
 
@@ -52,7 +64,7 @@
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field
-              v-model="dowod.birthdate"
+              v-model="dowod.birthDate"
               :rules="nameRules"
               label="Data urodzenia"
               required
@@ -103,7 +115,7 @@
         <v-row>
           <v-col cols="12">
             <v-text-field
-              v-model="dowod.birthplace"
+              v-model="dowod.birthPlace"
               :counter="100"
               :rules="nameRules"
               label="Miejsce urodzenia"
@@ -144,15 +156,39 @@
         </v-row>
       </v-col>
     </v-row>
+    <v-row justify="center" class="my-8 mt-11">
+      <v-col v-if="!readonly" cols="12" lg="9" xl="7">
+        <v-row no-gutters>
+          <v-spacer />
+          <v-btn
+            width="250"
+            color="green lighten-2"
+            class="white--text"
+            @click="saveDowod"
+            :loading="saveLoading"
+            >Zapisz dokument
+          </v-btn>
+        </v-row>
+      </v-col>
+    </v-row>
   </v-form>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
+  props: {
+    readonly: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
+      saveLoading: false,
+      valid: false,
+      id: "",
       dowod: {
         names: "",
         surname: "",
@@ -169,6 +205,9 @@ export default {
         expiryDate: "",
       },
       face: "",
+      front: "",
+      back: "",
+      nameRules: [(v) => !!v || "Pole wymagane"],
     };
   },
   computed: {
@@ -177,15 +216,35 @@ export default {
   watch: {
     getRecognisedDowod: {
       handler() {
-        console.log("jestem");
+        console.log('response :',this.getRecognisedDowod )
+        this.id = this.getRecognisedDowod.id;
         this.dowod = this.getRecognisedDowod.dowod;
         this.face = this.getRecognisedDowod.faceURL;
+        this.front = this.getRecognisedDowod.frontURL;
+        this.back = this.getRecognisedDowod.backURL;
       },
     },
   },
   updated() {
     console.log(this.getRecognisedDowod);
-    console.log("dowod", this.dowod);
+    console.log("dowod", this.dowod ,"id =",this.id);
+  },
+  methods: {
+    ...mapActions(["updateDowod"]),
+    async saveDowod() {
+      if (this.$refs.dowodForm.validate()) {
+        try {
+          this.saveLoading = true;
+          console.log("przed wysłaniem", this.id)
+          await this.updateDowod({ dowod: this.dowod, id: this.id });
+        } catch (error) {
+          console.log(error)
+        } finally {
+          this.saveLoading = false;
+        }
+        
+      }
+    },
   },
 };
 </script>
