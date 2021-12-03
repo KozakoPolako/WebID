@@ -21,6 +21,7 @@ interface documentData {
 }
 
 export interface DowodPLDocument {
+  _id?: ObjectID;
   faceID: ObjectID;
   frontID: ObjectID;
   backID: ObjectID;
@@ -37,7 +38,7 @@ class Mongo {
 
   constructor() {
     this.client = new MongoClient(CONNECTION_STRING);
-    this._connectionInit();
+    // this._connectionInit();
   }
   async _connectionInit() {
     try {
@@ -170,6 +171,28 @@ class Mongo {
       await this.client.close();
     }
   }
+  async getDowods(): Promise<Array<DowodPLDocument> | undefined> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.documentsCol = this.database.collection("dokumenty");
+
+      const filter = {
+        saved: true,
+      };
+      // const options = {
+      //   projection: {
+      //     _id: 1,
+      //   },
+      // }
+
+      const documents = await this.documentsCol.find(filter).toArray()
+      return documents
+    } catch (error) {
+    } finally {
+      await this.client.close();
+    }
+  }
   async sendDowodPhotoByID(id: ObjectID, res: Response): Promise<void> {
     try {
       await this.client.connect();
@@ -210,7 +233,7 @@ class Mongo {
   }
 }
 
-export default new Mongo();
+export default Mongo;
 
 // function snippets
 

@@ -54,17 +54,18 @@ router.get("/", (req, res, next) => {
 });
 //pobierz zdjęcie z dowodu
 router.get("/pl/dowod/zdjecie/:photo/:docID", async (req, res, next) => {
-  const document = await mongoController.getDowod(req.params.docID);
+  const mongo = new mongoController()
+  const document = await mongo.getDowod(req.params.docID);
   if (document) {
     switch (req.params.photo) {
       case "face":
-        mongoController.sendDowodPhotoByID(document.faceID, res);
+        mongo.sendDowodPhotoByID(document.faceID, res);
         break;
       case "front":
-        mongoController.sendDowodPhotoByID(document.frontID, res);
+        mongo.sendDowodPhotoByID(document.frontID, res);
         break;
       case "back":
-        mongoController.sendDowodPhotoByID(document.backID, res);
+        mongo.sendDowodPhotoByID(document.backID, res);
         break;
       default:
         res.status(400).json({
@@ -104,8 +105,9 @@ router.post(
         const frontfilename = req.files[0].filename.split(".")[0];
         // @ts-ignore
         const backfilename = req.files[1].filename.split(".")[0];
+        const mongo = new mongoController()
 
-        const record = await mongoController.insertDocument(
+        const record = await mongo.insertDocument(
           temp,
           frontfilename,
           backfilename
@@ -116,7 +118,7 @@ router.post(
           id: recordID,
           faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
           frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
-          backURL: `${adress}/dokuments/pl/dowod/zdjecie/fback/${recordID}`,
+          backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
         });
       } catch (e) {
         console.log(e);
@@ -127,11 +129,13 @@ router.post(
     }
   }
 );
+// aktualizuj dokument
 router.put("/pl/dowod/:docID", jsonParser, async (req,res, next) => {
   // if (req.body.validate()) {
     try {
+      const mongo = new mongoController()
       const dowod: Dowod = req.body;
-      await mongoController.updateDocument(dowod, req.params.docID)
+      await mongo.updateDocument(dowod, req.params.docID)
       
       res.status(200).json({
         message: "Udało się zapisać dokument"
@@ -150,6 +154,48 @@ router.put("/pl/dowod/:docID", jsonParser, async (req,res, next) => {
   //   })
   // } 
 
+});
+// pobierz liste dokumentów
+router.get("/pl/dowod", async (req,res, next) => { 
+  const mongo = new mongoController()
+  const documents = await mongo.getDowods()
+  if (documents) {
+    const payload = documents.map(v => {
+      const id = v._id?.toString() 
+      return {
+        id: id,
+        frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${id}`,
+      }
+    })
+    res.status(200).json({
+      _embeded: payload,
+    });
+  } else {
+    res.status(404).json({
+      message: "Nie znaleziono dokumentu",
+    });
+  }
+
+});
+// pobierz dokument 
+router.get("/pl/dowod/:docID", async (req,res, next) => {
+  const mongo = new mongoController()
+  const recordID = req.params.docID
+  const document = await mongo.getDowod(recordID)
+  if (document) {
+    const dowodData = document.dataHistory[document.dataHistory.length - 1] 
+    res.status(200).json({
+      dowod: dowodData.documentData,
+      id: recordID,
+      faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
+      frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
+      backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
+    });
+  } else {
+    res.status(404).json({
+      message: "Nie znaleziono dokumentu",
+    });
+  }
 });
 
 export default router;
