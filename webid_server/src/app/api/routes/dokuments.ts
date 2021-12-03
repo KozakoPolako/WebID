@@ -1,8 +1,10 @@
 import express, { Router, Request, Response } from "express";
+import bodyParser from 'body-parser'
 import multer from "multer";
 import DowodOsobistyPL from "../../../rec/dowodOsoistyPL";
 import mkdirp from "mkdirp";
 import fs from "fs";
+import { Dowod } from "../../../rec/dowodOsoistyPL";
 import { mongoController } from "../../app";
 
 const router = express.Router();
@@ -10,6 +12,8 @@ const router = express.Router();
 const adress = "http://localhost:3000";
 
 const storageDir = "./test/";
+
+const jsonParser = bodyParser.json();
 
 const storage = multer.diskStorage({
   async destination(req, file, callback) {
@@ -109,6 +113,7 @@ router.post(
         const recordID = record?.insertedId.toString();
         res.status(200).json({
           dowod: temp,
+          id: recordID,
           faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
           frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
           backURL: `${adress}/dokuments/pl/dowod/zdjecie/fback/${recordID}`,
@@ -122,5 +127,29 @@ router.post(
     }
   }
 );
+router.put("/pl/dowod/:docID", jsonParser, async (req,res, next) => {
+  // if (req.body.validate()) {
+    try {
+      const dowod: Dowod = req.body;
+      await mongoController.updateDocument(dowod, req.params.docID)
+      
+      res.status(200).json({
+        message: "Udało się zapisać dokument"
+      });
+    } catch (e) {
+      console.log(e);
+      res.status(400).json({
+        message: "Formularz zawiera niepoprawne dane"
+      });
+    }
+    
+
+  // } else {
+  //   res.status(400).json ({
+  //     message: "Formularz zawiera niepoprawne dane"
+  //   })
+  // } 
+
+});
 
 export default router;

@@ -101,6 +101,35 @@ class Mongo {
       await this.client.close();
     }
   }
+  async updateDocument(doc: Dowod, id: string): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.documentsCol = this.database.collection("dokumenty");
+
+      const filter = {
+        _id: new ObjectID(id),
+      };
+      const update = {
+        $addToSet: {
+          dataHistory: {
+            creationDate: new Date(),
+            documentData: doc,
+          },
+        },
+        $set: { saved: true },
+      };
+      const result = await this.documentsCol.updateOne(filter, update);
+      console.log(
+        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+      );
+    } catch (error) {
+      console.log("ERROR: ", error);
+      throw new Error("Nie udało się zapisać dowodu");
+    } finally {
+      await this.client.close();
+    }
+  }
   async _uploadFile(
     path: string,
     filename: string,
@@ -149,9 +178,9 @@ class Mongo {
       this.photosBucket = new GridFSBucket(this.database, {
         bucketName: "DowodPhotos",
       });
-      
+
       const downloadStrem = this.photosBucket.openDownloadStream(id);
-      await this._downloadFile(downloadStrem,res);
+      await this._downloadFile(downloadStrem, res);
     } catch (error) {
     } finally {
       await this.client.close();
