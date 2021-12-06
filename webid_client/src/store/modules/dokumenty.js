@@ -6,10 +6,12 @@ const resURI = "http://localhost:3000";
 
 const state = {
   dowod: {},
+  allDowods: [],
 };
 
 const getters = {
   getRecognisedDowod: (state) => state.dowod,
+  getAllDowods: (state) => state.allDowods,
 };
 
 const actions = {
@@ -44,14 +46,22 @@ const actions = {
       expiryDate: data.dowod.expiryDate,
       MRZ: data.dowod.MRZ,
     };
-    console.log("mam :", payload, " id :::", data.id);
-    const response = await axios.put(`${resURI}/dokuments/pl/dowod/${data.id}`, payload)
-    console.log(response)
+    const response = await axios.put(
+      `${resURI}/dokuments/pl/dowod/${data.id}`,
+      payload
+    );
+  },
+  async fetchDowods({ commit }) {
+    const response = await axios.get(`${resURI}/dokuments/pl/dowod`);
+    commit("SET_DOWODS", response.data);
   },
 };
 const mutations = {
-  RECOGNISE_DOWOD: (state, peyload) => {
-    state.dowod = peyload.data;
+  RECOGNISE_DOWOD: (state, payload) => {
+    state.dowod = payload.data;
+  },
+  SET_DOWODS: (state, payload) => {
+    state.allDowods = "_embeded" in payload ? payload._embeded : [];
   },
 };
 
