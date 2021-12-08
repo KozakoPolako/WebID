@@ -10,7 +10,7 @@ const state = {
 };
 
 const getters = {
-  getRecognisedDowod: (state) => state.dowod,
+  getCurrentDowod: (state) => state.dowod,
   getAllDowods: (state) => state.allDowods,
 };
 
@@ -27,7 +27,7 @@ const actions = {
       },
     });
     console.log("responce :", response);
-    commit("RECOGNISE_DOWOD", response);
+    commit("SET_DOWOD", response);
   },
   async updateDowod({ commit }, data) {
     const payload = {
@@ -55,9 +55,13 @@ const actions = {
     const response = await axios.get(`${resURI}/dokuments/pl/dowod`);
     commit("SET_DOWODS", response.data);
   },
+  async fetchDowod({ commit }, id) {
+    const response = await axios.get(`${resURI}/dokuments/pl/dowod/${id}`);
+    commit("SET_DOWOD", response);
+  },
 };
 const mutations = {
-  RECOGNISE_DOWOD: (state, payload) => {
+  SET_DOWOD: (state, payload) => {
     state.dowod = payload.data;
   },
   SET_DOWODS: (state, payload) => {

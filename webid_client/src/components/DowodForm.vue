@@ -211,23 +211,23 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getRecognisedDowod"]),
+    ...mapGetters(["getCurrentDowod"]),
   },
   watch: {
-    getRecognisedDowod: {
+    getCurrentDowod: {
       handler() {
-        console.log('response :',this.getRecognisedDowod )
-        this.id = this.getRecognisedDowod.id;
-        this.dowod = this.getRecognisedDowod.dowod;
-        this.face = this.getRecognisedDowod.faceURL;
-        this.front = this.getRecognisedDowod.frontURL;
-        this.back = this.getRecognisedDowod.backURL;
+        console.log("response :", this.getCurrentDowod);
+        this.id = this.getCurrentDowod.id;
+        this.dowod = this.getCurrentDowod.dowod;
+        this.face = this.getCurrentDowod.faceURL;
+        this.front = this.getCurrentDowod.frontURL;
+        this.back = this.getCurrentDowod.backURL;
       },
     },
   },
   updated() {
-    console.log(this.getRecognisedDowod);
-    console.log("dowod", this.dowod ,"id =",this.id);
+    console.log(this.getCurrentDowod);
+    console.log("dowod", this.dowod, "id =", this.id);
   },
   methods: {
     ...mapActions(["updateDowod"]),
@@ -235,14 +235,19 @@ export default {
       if (this.$refs.dowodForm.validate()) {
         try {
           this.saveLoading = true;
-          console.log("przed wysłaniem", this.id)
+          console.log("przed wysłaniem", this.id);
           await this.updateDowod({ dowod: this.dowod, id: this.id });
+          this.$toast.success("Udało się zapisać dokument");
+          this.$router.push({
+            name: "documentView",
+            params: { docID: this.id },
+          });
         } catch (error) {
-          console.log(error)
+          console.log(error);
+          this.$toast.error(`Error: ${error.data.message}`);
         } finally {
           this.saveLoading = false;
         }
-        
       }
     },
   },
