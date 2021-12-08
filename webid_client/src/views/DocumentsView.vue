@@ -24,7 +24,7 @@ export default {
   data() {
     return {
       tabs: ["Dowód osobisty", "Paszport"],
-      selTab: null,
+      selTab:null,
     };
   },
   mounted() {},
