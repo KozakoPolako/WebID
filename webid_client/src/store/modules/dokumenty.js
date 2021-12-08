@@ -6,10 +6,12 @@ const resURI = "http://localhost:3000";
 
 const state = {
   dowod: {},
+  allDowods: [],
 };
 
 const getters = {
   getRecognisedDowod: (state) => state.dowod,
+  getAllDowods: (state) => state.allDowods,
 };
 
 const actions = {
@@ -27,10 +29,39 @@ const actions = {
     console.log("responce :", response);
     commit("RECOGNISE_DOWOD", response);
   },
+  async updateDowod({ commit }, data) {
+    const payload = {
+      names: data.dowod.names,
+      surname: data.dowod.surname,
+      parentsNames: data.dowod.parentsNames,
+      birthDate: data.dowod.birthDate,
+      familyName: data.dowod.familyName,
+      sex: data.dowod.sex,
+      id: data.dowod.id,
+      pesel: data.dowod.pesel,
+      nationality: data.dowod.nationality,
+      birthPlace: data.dowod.birthPlace,
+      issueDate: data.dowod.issueDate,
+      issuingAuthority: data.dowod.issuingAuthority,
+      expiryDate: data.dowod.expiryDate,
+      MRZ: data.dowod.MRZ,
+    };
+    const response = await axios.put(
+      `${resURI}/dokuments/pl/dowod/${data.id}`,
+      payload
+    );
+  },
+  async fetchDowods({ commit }) {
+    const response = await axios.get(`${resURI}/dokuments/pl/dowod`);
+    commit("SET_DOWODS", response.data);
+  },
 };
 const mutations = {
-  RECOGNISE_DOWOD: (state, peyload) => {
-    state.dowod = peyload.data;
+  RECOGNISE_DOWOD: (state, payload) => {
+    state.dowod = payload.data;
+  },
+  SET_DOWODS: (state, payload) => {
+    state.allDowods = "_embeded" in payload ? payload._embeded : [];
   },
 };
 
