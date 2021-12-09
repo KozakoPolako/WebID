@@ -32,10 +32,19 @@ const routes = [
     path: "/document",
     name: "documentsView",
     meta: {
-      title: "Lista doumentów",
+      title: "Lista dokumentów",
     },
 
     component: () => import("../views/DocumentsView.vue"),
+  },
+  {
+    path: "/document/:docID",
+    name: "documentView",
+    meta: {
+      title: "Dokument",
+    },
+
+    component: () => import("../views/EditDocument.vue"),
   },
 ];
 

@@ -2,10 +2,13 @@
   <v-container class="pa-6">
     <v-row justify="caneter">
       <v-col v-for="dowod in items" :key="dowod.id" cols="12" lg="3" sm="6">
-        <v-card class="pa-0 rounded-lg green lighten-3" >
+        <v-card class="pa-0 rounded-lg green lighten-3">
           <v-card-title class="py-1">Dowod:</v-card-title>
-          <v-card-text class="white rounded-lg pa-2 ml-2 dowod-img ">
-            <v-img :src="dowod.frontURL" class="rounded-lg" ></v-img>
+          <v-card-text
+            class="white rounded-lg pa-2 ml-2 dowod-img"
+            @click="redirectToDowod(dowod.id)"
+          >
+            <v-img :src="dowod.frontURL" class="rounded-lg"></v-img>
           </v-card-text>
         </v-card>
       </v-col>
@@ -23,17 +26,15 @@ export default {
     };
   },
   computed: {
-    ...mapGetters([
-      'getAllDowods',
-    ]),
+    ...mapGetters(["getAllDowods"]),
   },
   watch: {
-    getAllDowods:{
+    getAllDowods: {
       handler() {
-        this.items = this.getAllDowods
+        this.items = this.getAllDowods;
       },
       deep: true,
-    }
+    },
   },
   async mounted() {
     // const temp = {
@@ -43,25 +44,26 @@ export default {
     // for(let i = 0; i < 23; i++) {
     //   this.items.push(temp)
     // }
-    await this.fetchDowods()
+    await this.fetchDowods();
   },
   methods: {
-    ...mapActions([
-      'fetchDowods'
-    ]),
+    ...mapActions(["fetchDowods"]),
+    redirectToDowod(docID) {
+      this.$router.push({ name: "documentView", params: { docID: docID } });
+    },
   },
 };
 </script>
 
 <style scoped>
-.dowod-img{
+.dowod-img {
   box-shadow: -3px -5px 13px -5px rgba(66, 68, 90, 1);
-  background-color: rgba(61,90,254,0);
+  background-color: rgba(61, 90, 254, 0);
 }
 .dowod-img:hover {
   cursor: pointer;
   background-color: rgba(128, 255, 236, 0.85) !important;
-  transform: scale(1.03,1.03);
+  transform: scale(1.03, 1.03);
   transition: all 0.5s;
   overflow: visible;
 }
