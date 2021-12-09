@@ -59,6 +59,9 @@ const actions = {
     const response = await axios.get(`${resURI}/dokuments/pl/dowod/${id}`);
     commit("SET_DOWOD", response);
   },
+  async deleteDowod({ commit }, id) {
+    const responce = await axios.delete(`${resURI}/dokuments/pl/dowod/${id}`)
+  }
 };
 const mutations = {
   SET_DOWOD: (state, payload) => {

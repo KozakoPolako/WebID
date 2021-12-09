@@ -2,7 +2,12 @@
   <v-form v-model="valid" ref="dowodForm" lazy-validation :readonly="readonly">
     <v-row class="d-flex" justify="center">
       <v-col cols="12" lg="9" xl="7">
-        <v-row justify="center">
+        <v-row justify="center" class="mb-3">
+          <v-card class="mb-5" justify="center" width="280" elevation="10">
+            <v-img :src="face" width="280" height="360" />
+          </v-card>
+        </v-row>
+        <v-row justify="center" class="mb-10">
           <v-col cols="12" md="6">
             <v-card max-width="650" class="mx-auto">
               <v-img :src="front" max-width="650" />
@@ -14,11 +19,7 @@
             </v-card>
           </v-col>
         </v-row>
-        <v-row justify="center" class="mb-10">
-          <v-card class="mb-5" justify="center" width="280" elevation="10">
-            <v-img :src="face" width="280" height="360" />
-          </v-card>
-        </v-row>
+        
 
         <v-card-title class="pl-0">Przód:</v-card-title>
         <v-row>
@@ -216,21 +217,24 @@ export default {
   watch: {
     getCurrentDowod: {
       handler() {
-        console.log("response :", this.getCurrentDowod);
         this.id = this.getCurrentDowod.id;
-        this.dowod = this.getCurrentDowod.dowod;
+        this.dowod = Object.assign({}, this.getCurrentDowod.dowod);
         this.face = this.getCurrentDowod.faceURL;
         this.front = this.getCurrentDowod.frontURL;
         this.back = this.getCurrentDowod.backURL;
       },
     },
-  },
-  updated() {
-    console.log(this.getCurrentDowod);
-    console.log("dowod", this.dowod, "id =", this.id);
+    readonly(newVal, oldVal) {
+      if (oldVal === false && newVal === true) {
+        this.dowod = Object.assign({}, this.getCurrentDowod.dowod);
+      }
+    },
   },
   methods: {
-    ...mapActions(["updateDowod"]),
+    ...mapActions([
+      "updateDowod",
+      "fetchDowod"
+    ]),
     async saveDowod() {
       if (this.$refs.dowodForm.validate()) {
         try {
@@ -238,10 +242,14 @@ export default {
           console.log("przed wysłaniem", this.id);
           await this.updateDowod({ dowod: this.dowod, id: this.id });
           this.$toast.success("Udało się zapisać dokument");
-          this.$router.push({
-            name: "documentView",
-            params: { docID: this.id },
-          });
+          if (this.$route.name === "documentView") {
+            await this.fetchDowod(this.id)
+          } else {
+            this.$router.push({
+              name: "documentView",
+              params: { docID: this.id },
+            });
+          }
         } catch (error) {
           console.log(error);
           this.$toast.error(`Error: ${error.data.message}`);
