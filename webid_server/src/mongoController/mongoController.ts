@@ -1,3 +1,4 @@
+import { rejects } from "assert";
 import { ObjectID } from "bson";
 import { Response } from "express";
 import fs from "fs";
@@ -171,6 +172,25 @@ class Mongo {
       await this.client.close();
     }
   }
+  async deleteDowod(id: string): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.documentsCol = this.database.collection("dokumenty");
+
+      const results = await this.documentsCol.deleteOne({
+        _id: new ObjectID(id),
+      });
+      console.log(results);
+      if (results.deletedCount != 1) {
+        throw new Error("Nie udało się usunąć dokumentu");
+      }
+    } catch (error) {
+      console.log(`Dind Error: ${error}`);
+    } finally {
+      await this.client.close();
+    }
+  }
   async getDowods(): Promise<Array<DowodPLDocument> | undefined> {
     try {
       await this.client.connect();
@@ -186,8 +206,8 @@ class Mongo {
       //   },
       // }
 
-      const documents = await this.documentsCol.find(filter).toArray()
-      return documents
+      const documents = await this.documentsCol.find(filter).toArray();
+      return documents;
     } catch (error) {
     } finally {
       await this.client.close();
