@@ -11,6 +11,7 @@
     "axios": "^0.23.0",
     "core-js": "^3.6.5",
     "form-data": "^4.0.0",
+    "v-mask": "^2.3.0",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "vue-toastification": "^1.7.14",
