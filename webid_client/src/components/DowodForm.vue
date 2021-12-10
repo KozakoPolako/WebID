@@ -19,24 +19,25 @@
             </v-card>
           </v-col>
         </v-row>
-        
 
         <v-card-title class="pl-0">Przód:</v-card-title>
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.names"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.namesRules"
               label="Imiona"
               required
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.surname"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.surnameRules"
               label="Nazwisko"
               required
             ></v-text-field>
@@ -45,18 +46,20 @@
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.parentsNames"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.parentsNamesRules"
               label="Imiona rodziców"
               required
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
-              v-model="dowod.surname"
+              color="green"
+              v-model="dowod.familyName"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.familyNameRules"
               label="Nazwisko rodowe"
               required
             ></v-text-field>
@@ -65,17 +68,20 @@
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.birthDate"
-              :rules="nameRules"
+              :rules="rules.birthDateRules"
               label="Data urodzenia"
               required
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.sex"
+              v-mask="'A'"
               :counter="1"
-              :rules="nameRules"
+              :rules="rules.sexRules"
               label="Płeć"
               required
             ></v-text-field>
@@ -85,19 +91,23 @@
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.pesel"
-              :counter="100"
-              :rules="nameRules"
+              v-mask="'###########'"
+              :counter="11"
+              :rules="rules.peselRules"
               label="Pesel"
               required
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.id"
+              v-mask="'AAA ######'"
               :counter="100"
-              :rules="nameRules"
-              label="Seria,numer dowodu"
+              :rules="rules.idRules"
+              label="Seria, numer dowodu"
               required
             ></v-text-field>
           </v-col>
@@ -105,9 +115,10 @@
         <v-row>
           <v-col cols="12">
             <v-text-field
+              color="green"
               v-model="dowod.nationality"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.nationalityRules"
               label="Obywatelstwo"
               required
             ></v-text-field>
@@ -116,9 +127,10 @@
         <v-row>
           <v-col cols="12">
             <v-text-field
+              color="green"
               v-model="dowod.birthPlace"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.birthPlaceRules"
               label="Miejsce urodzenia"
               required
             ></v-text-field>
@@ -127,9 +139,10 @@
         <v-row>
           <v-col cols="12">
             <v-text-field
+              color="green"
               v-model="dowod.issuingAuthority"
               :counter="100"
-              :rules="nameRules"
+              :rules="rules.issuingAuthorityRules"
               label="Organ wydający"
               required
             ></v-text-field>
@@ -138,18 +151,22 @@
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.issueDate"
-              :counter="100"
-              :rules="nameRules"
+              v-mask="'##.##.####'"
+              :counter="10"
+              :rules="rules.issueDateRules"
               label="Data Wydania"
               required
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field
+              color="green"
               v-model="dowod.expiryDate"
-              :counter="100"
-              :rules="nameRules"
+              v-mask="'##.##.####'"
+              :counter="10"
+              :rules="rules.expiryDateRules"
               label="Termin Ważności"
               required
             ></v-text-field>
@@ -161,14 +178,19 @@
       <v-col v-if="!readonly" cols="12" lg="9" xl="7">
         <v-row no-gutters>
           <v-spacer />
-          <v-btn
-            width="250"
-            color="green lighten-2"
-            class="white--text"
-            @click="saveDowod"
-            :loading="saveLoading"
-            >Zapisz dokument
-          </v-btn>
+          <v-col cols="12" lg="auto">
+            <v-btn
+              width="100%"
+              color="green lighten-2"
+              class="white--text"
+              @click="saveDowod"
+              :loading="saveLoading"
+              outlined
+            >
+              Zapisz dokument
+              <v-icon class="ml-2 my-auto" size="18">mdi-pencil-outline</v-icon>
+            </v-btn>
+          </v-col>
         </v-row>
       </v-col>
     </v-row>
@@ -208,11 +230,99 @@ export default {
       face: "",
       front: "",
       back: "",
-      nameRules: [(v) => !!v || "Pole wymagane"],
+      // nameRules: (v) => !!v || "Pole wymagane",
+      rules: {
+        namesRules: [],
+        surnameRules: [],
+        parentsNamesRules: [],
+        birthDateRules: [],
+        familyNameRules: [],
+        sexRules: [],
+        idRules: [],
+        peselRules: [],
+        nationalityRules: [],
+        birthPlaceRules: [],
+        issueDateRules: [],
+        issuingAuthorityRules: [],
+        expiryDateRules: [],
+      },
+      generalRules: {
+        required: (v) => !!v || "Pole wymagane",
+        isDate: (v) =>
+          /^(((0)[0-9])|((1)[0-2]))(\.)([0-2][0-9]|(3)[0-1])(\.)\d{4}$/.test(
+            v
+          ) || "Wprowadź datę w formacie mm.dd.rrrr",
+        onlyLetters: (v) =>
+          /^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ ]+$/.test(v) ||
+          "Wprowadzono niedozwolone znaki",
+      },
+      rulesList: {
+        namesRules: {},
+        surnameRules: {},
+        parentsNamesRules: {},
+        birthDateRules: {},
+        familyNameRules: {},
+        sexRules: {
+          sexCheck: (v) => /[KM]/.test(v) || "K - Kobieta M - Mężczyzna",
+        },
+        idRules: {
+          controlCheck: (v) => this.isValidSeriaDowodu(v) || "Nieprawidłowy numer dowodu",
+        },
+        peselRules: {
+          lengthCheck: (v) =>
+            /^[0-9]{11}$/.test(v) || "Numer Pesel musi zawierać 11 cyfr",
+          dateCheck: (v) =>
+            (parseInt(v.substring(4, 6)) <= 31 &&
+              parseInt(v.substring(2, 4)) <= 12) ||
+            "Nieprawidłowy numer Pesel", // sprawdzenie czy liczby zawiewierające rok urodzenia są poprawna datą
+          controlCheck: (v) => {
+            const digits = ("" + v).split("");
+            let checksum =
+              (1 * parseInt(digits[0]) +
+                3 * parseInt(digits[1]) +
+                7 * parseInt(digits[2]) +
+                9 * parseInt(digits[3]) +
+                1 * parseInt(digits[4]) +
+                3 * parseInt(digits[5]) +
+                7 * parseInt(digits[6]) +
+                9 * parseInt(digits[7]) +
+                1 * parseInt(digits[8]) +
+                3 * parseInt(digits[9])) %
+              10;
+            if (checksum == 0) {
+              checksum = 10;
+            }
+            checksum = 10 - checksum;
+            return (
+              parseInt(digits[10]) === checksum || "Nieprawidłowy numer Pesel"
+            ); // sprawdzenie sumy kontrolnej
+          },
+        },
+        nationalityRules: {},
+        birthPlaceRules: {},
+        issueDateRules: {
+          isInFuture: (v) =>
+            new Date(v) < new Date() ||
+            "Data wydania nie może być z przyszłości",
+        },
+        issuingAuthorityRules: {},
+        expiryDateRules: {
+          expiryCheck: (v) => {
+            return (
+              new Date(v).setHours(0, 0, 0, 0) >=
+                new Date().setHours(0, 0, 0, 0) ||
+              "Data ważności dokumentu wygasła"
+            );
+          },
+        },
+      },
     };
   },
   computed: {
-    ...mapGetters(["getCurrentDowod"]),
+    ...mapGetters(["getCurrentDowod", "getDowodRules"]),
+  },
+  mounted() {
+    this.setRules();
   },
   watch: {
     getCurrentDowod: {
@@ -231,10 +341,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions([
-      "updateDowod",
-      "fetchDowod"
-    ]),
+    ...mapActions(["updateDowod", "fetchDowod"]),
     async saveDowod() {
       if (this.$refs.dowodForm.validate()) {
         try {
@@ -243,7 +350,7 @@ export default {
           await this.updateDowod({ dowod: this.dowod, id: this.id });
           this.$toast.success("Udało się zapisać dokument");
           if (this.$route.name === "documentView") {
-            await this.fetchDowod(this.id)
+            await this.fetchDowod(this.id);
           } else {
             this.$router.push({
               name: "documentView",
@@ -257,6 +364,119 @@ export default {
           this.saveLoading = false;
         }
       }
+    },
+    getValueFromLetter(letter) {
+      const values = [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+      ];
+      for (let i = 0; i < values.length; i++) {
+        if (letter === values[i]) {
+          return i;
+        }
+      }
+      return -1;
+    },
+    isValidSeriaDowodu(v) {
+      const seriaDigits = v.toUpperCase().replace(/ /g, "");
+      console.log("seriaTrim :", seriaDigits)
+      let sum =
+        7 * this.getValueFromLetter(seriaDigits[0]) +
+        3 * this.getValueFromLetter(seriaDigits[1]) +
+        1 * this.getValueFromLetter(seriaDigits[2]) +
+        7 * this.getValueFromLetter(seriaDigits[4]) +
+        3 * this.getValueFromLetter(seriaDigits[5]) +
+        1 * this.getValueFromLetter(seriaDigits[6]) +
+        7 * this.getValueFromLetter(seriaDigits[7]) +
+        3 * this.getValueFromLetter(seriaDigits[8]);
+      sum %=10;
+      console.log("seriaTrim :", sum === this.getValueFromLetter(seriaDigits[3]))
+      return sum === this.getValueFromLetter(seriaDigits[3])
+    },
+    setRules() {
+      this.rules = {
+        namesRules: [this.generalRules.required, this.generalRules.onlyLetters],
+        surnameRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        parentsNamesRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        birthDateRules: [this.generalRules.required],
+        familyNameRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        sexRules: [
+          this.generalRules.required,
+          this.rulesList.sexRules.sexCheck,
+        ],
+        idRules: [
+          this.generalRules.required,
+          this.rulesList.idRules.controlCheck,
+        ],
+        peselRules: [
+          this.generalRules.required,
+          this.rulesList.peselRules.lengthCheck,
+          this.rulesList.peselRules.dateCheck,
+          this.rulesList.peselRules.controlCheck,
+        ],
+        nationalityRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        birthPlaceRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        issueDateRules: [
+          this.generalRules.required,
+          this.generalRules.isDate,
+          this.rulesList.issueDateRules.isInFuture,
+        ],
+        issuingAuthorityRules: [],
+        expiryDateRules: [
+          this.generalRules.required,
+          this.generalRules.isDate,
+          this.rulesList.expiryDateRules.expiryCheck,
+        ],
+      };
     },
   },
 };

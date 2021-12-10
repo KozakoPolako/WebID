@@ -2,7 +2,7 @@
 import axios from "axios";
 import FormData from "form-data";
 
-const resURI = "http://localhost:3000";
+const resURI = "http://localhost:3000/api";
 
 const state = {
   dowod: {},
