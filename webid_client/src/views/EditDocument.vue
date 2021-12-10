@@ -7,28 +7,82 @@
             <h2>Dowod: {{ titleText }}</h2>
           </v-col>
           <v-spacer />
-          <v-col cols="auto">
-            <v-btn color="error" @click="removeDowod">Usuń</v-btn>
+          <v-col cols="12" lg="auto">
+            <v-btn color="error" @click="deleteDialog=true" width="100%" outlined>
+              Usuń
+              <v-icon class="ml-2 my-auto" size="18"
+                >mdi-trash-can-outline</v-icon
+              >
+            </v-btn>
           </v-col>
-          <v-col cols="auto">
+          <v-col cols="12" lg="2">
             <v-btn
               v-show="!editMode"
               color="green lighten-2"
               @click="editMode = true"
-              >Edytuj</v-btn
+              outlined
+              width="100%"
             >
+              Edytuj
+              <v-icon class="ml-2 my-auto" size="18">mdi-pencil-outline</v-icon>
+            </v-btn>
             <v-btn
               v-show="editMode"
               color="green lighten-2"
               @click="editMode = false"
-              >Anuluj</v-btn
+              width="100%"
+              outlined
             >
+              Anuluj
+              <v-icon class="ml-2 my-auto" size="18"
+                >mdi-pencil-off-outline</v-icon
+              >
+            </v-btn>
           </v-col>
         </v-row>
       </v-col>
     </v-row>
     <div style="height: 150px"></div>
     <dowod-form :readonly.sync="readonly" />
+    <v-dialog
+      v-model="deleteDialog"
+      width="500"
+    >
+      <v-card>
+        <v-card-title>Czy napewno chcesz usunąć dokument?</v-card-title>
+        <v-card-text>
+          Operacji nie będzie można cofnąć.
+        </v-card-text>
+        <v-card-actions >
+          <v-row justify="end" dense>
+            <v-col cols="auto">
+              <v-btn
+                color="error"
+                @click="removeDowod"
+                plain
+              >
+                Usuń
+                <v-icon class="ml-2 my-auto" size="18">
+                  mdi-trash-can-outline
+                </v-icon>
+              </v-btn>
+            </v-col>
+            <v-col cols="auto">
+              <v-btn
+                plain
+                @click="deleteDialog=false"
+              >
+                Anuluj
+                <v-icon class="ml-2 my-auto" size="18">
+                  mdi-close-box-outline
+                </v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+          
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -43,6 +97,7 @@ export default {
     return {
       titleText: "",
       editMode: false,
+      deleteDialog: false,
     };
   },
   computed: {
