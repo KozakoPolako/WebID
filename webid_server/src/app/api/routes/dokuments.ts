@@ -9,7 +9,7 @@ import { mongoController } from "../../app";
 
 const router = express.Router();
 
-const adress = "http://localhost:3000";
+const adress = "http://localhost:3000/api";
 
 const storageDir = "./test/";
 
