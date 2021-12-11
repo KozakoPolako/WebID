@@ -1,5 +1,5 @@
 import express, { Router, Request, Response } from "express";
-import bodyParser from 'body-parser'
+import bodyParser from "body-parser";
 import multer from "multer";
 import DowodOsobistyPL from "../../../rec/dowodOsoistyPL";
 import mkdirp from "mkdirp";
@@ -9,7 +9,7 @@ import { mongoController } from "../../app";
 
 const router = express.Router();
 
-const adress = "http://localhost:3000";
+const adress = "http://localhost:3000/api";
 
 const storageDir = "./test/";
 
@@ -54,7 +54,7 @@ router.get("/", (req, res, next) => {
 });
 //pobierz zdjęcie z dowodu
 router.get("/pl/dowod/zdjecie/:photo/:docID", async (req, res, next) => {
-  const mongo = new mongoController()
+  const mongo = new mongoController();
   const document = await mongo.getDowod(req.params.docID);
   if (document) {
     switch (req.params.photo) {
@@ -105,7 +105,7 @@ router.post(
         const frontfilename = req.files[0].filename.split(".")[0];
         // @ts-ignore
         const backfilename = req.files[1].filename.split(".")[0];
-        const mongo = new mongoController()
+        const mongo = new mongoController();
 
         const record = await mongo.insertDocument(
           temp,
@@ -130,43 +130,41 @@ router.post(
   }
 );
 // aktualizuj dokument
-router.put("/pl/dowod/:docID", jsonParser, async (req,res, next) => {
+router.put("/pl/dowod/:docID", jsonParser, async (req, res, next) => {
   // if (req.body.validate()) {
-    try {
-      const mongo = new mongoController()
-      const dowod: Dowod = req.body;
-      await mongo.updateDocument(dowod, req.params.docID)
-      
-      res.status(200).json({
-        message: "Udało się zapisać dokument"
-      });
-    } catch (e) {
-      console.log(e);
-      res.status(400).json({
-        message: "Formularz zawiera niepoprawne dane"
-      });
-    }
-    
+  try {
+    const mongo = new mongoController();
+    const dowod: Dowod = req.body;
+    await mongo.updateDocument(dowod, req.params.docID);
+
+    res.status(200).json({
+      message: "Udało się zapisać dokument",
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(400).json({
+      message: "Formularz zawiera niepoprawne dane",
+    });
+  }
 
   // } else {
   //   res.status(400).json ({
   //     message: "Formularz zawiera niepoprawne dane"
   //   })
-  // } 
-
+  // }
 });
 // pobierz liste dokumentów
-router.get("/pl/dowod", async (req,res, next) => { 
-  const mongo = new mongoController()
-  const documents = await mongo.getDowods()
+router.get("/pl/dowod", async (req, res, next) => {
+  const mongo = new mongoController();
+  const documents = await mongo.getDowods();
   if (documents) {
-    const payload = documents.map(v => {
-      const id = v._id?.toString() 
+    const payload = documents.map((v) => {
+      const id = v._id?.toString();
       return {
         id: id,
         frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${id}`,
-      }
-    })
+      };
+    });
     res.status(200).json({
       _embeded: payload,
     });
@@ -175,15 +173,15 @@ router.get("/pl/dowod", async (req,res, next) => {
       message: "Nie znaleziono dokumentu",
     });
   }
-
 });
-// pobierz dokument 
-router.get("/pl/dowod/:docID", async (req,res, next) => {
-  const mongo = new mongoController()
-  const recordID = req.params.docID
-  const document = await mongo.getDowod(recordID)
+
+// pobierz dokument
+router.get("/pl/dowod/:docID", async (req, res, next) => {
+  const mongo = new mongoController();
+  const recordID = req.params.docID;
+  const document = await mongo.getDowod(recordID);
   if (document) {
-    const dowodData = document.dataHistory[document.dataHistory.length - 1] 
+    const dowodData = document.dataHistory[document.dataHistory.length - 1];
     res.status(200).json({
       dowod: dowodData.documentData,
       id: recordID,
@@ -194,6 +192,22 @@ router.get("/pl/dowod/:docID", async (req,res, next) => {
   } else {
     res.status(404).json({
       message: "Nie znaleziono dokumentu",
+    });
+  }
+});
+
+// usuń dokument
+router.delete("/pl/dowod/:docID", async (req, res, next) => {
+  const mongo = new mongoController();
+  const recordID = req.params.docID;
+  try {
+    await mongo.deleteDowod(recordID);
+    res.status(200).json({
+      message: "Udało się usunąć dokument",
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: error,
     });
   }
 });

@@ -2,7 +2,7 @@
 import axios from "axios";
 import FormData from "form-data";
 
-const resURI = "http://localhost:3000";
+const resURI = "http://localhost:3000/api";
 
 const state = {
   dowod: {},
@@ -59,6 +59,9 @@ const actions = {
     const response = await axios.get(`${resURI}/dokuments/pl/dowod/${id}`);
     commit("SET_DOWOD", response);
   },
+  async deleteDowod({ commit }, id) {
+    const responce = await axios.delete(`${resURI}/dokuments/pl/dowod/${id}`)
+  }
 };
 const mutations = {
   SET_DOWOD: (state, payload) => {

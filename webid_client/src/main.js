@@ -4,6 +4,7 @@ import store from './store'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import toast from "vue-toastification";
+import VueMask from 'v-mask'
 import "vue-toastification/dist/index.css";
 Vue.config.productionTip = false
 
@@ -19,3 +20,4 @@ const options = {
 }
 
 Vue.use(toast, options)
+Vue.use(VueMask)
