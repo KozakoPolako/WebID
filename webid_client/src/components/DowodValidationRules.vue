@@ -38,7 +38,13 @@
 
     <v-row class="pa-4" justify="end">
       <v-col cols="12" lg="auto">
-        <v-btn outlined color="green lighten-2" width="100%">
+        <v-btn
+          outlined
+          color="green lighten-2"
+          width="100%"
+          :loading="dowodSaveLoading"
+          @click="saveDowodRules"
+        >
           Zapisz
           <v-icon class="ml-2 my-auto" size="18"> mdi-pencil-outline </v-icon>
         </v-btn>
@@ -48,6 +54,8 @@
 </template>
 
 <script>
+import { mapActions, mapGetters } from "vuex";
+
 export default {
   name: "DowodValidationRules",
   props: {
@@ -58,6 +66,7 @@ export default {
   },
   data() {
     return {
+      dowodSaveLoading: false,
       dowodValidationRules: {
         isNotExpired: false,
         isIssueDateCorrect: false,
@@ -68,6 +77,36 @@ export default {
         isData_MRZValid: false,
       },
     };
+  },
+  computed: {
+    ...mapGetters(["getDowodRules"]),
+  },
+  watch: {
+    getDowodRules: {
+      handler(val) {
+        if (!val && !("isNotExpired" in val)) return;
+        console.log("test: ", this.dowodValidationRules)
+        this.dowodValidationRules = Object.assign({}, val);
+        console.log("test: ", this.dowodValidationRules)
+      },
+      deep: true,
+    },
+  },
+  methods: {
+    ...mapActions(["updateDowodRules"]),
+
+    async saveDowodRules() {
+      try {
+        this.dowodSaveLoading = true 
+        await this.updateDowodRules(this.dowodValidationRules);
+        this.$toast.success("Zapisano ustawienia");
+      } catch (error) {
+        console.log(error);
+        this.$toast.error("Nie udało się zapisać ustawień");
+      } finally {
+        this.dowodSaveLoading = false
+      }
+    },
   },
 };
 </script>
