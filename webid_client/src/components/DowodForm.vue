@@ -255,6 +255,8 @@ export default {
         onlyLetters: (v) =>
           /^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ ]+$/.test(v) ||
           "Wprowadzono niedozwolone znaki",
+        isInFuture: (v) =>
+          new Date(v) < new Date() || "Data wydania nie może być z przyszłości",
       },
       rulesList: {
         namesRules: {},
@@ -266,7 +268,8 @@ export default {
           sexCheck: (v) => /[KM]/.test(v) || "K - Kobieta M - Mężczyzna",
         },
         idRules: {
-          controlCheck: (v) => this.isValidSeriaDowodu(v) || "Nieprawidłowy numer dowodu",
+          controlCheck: (v) =>
+            this.isValidSeriaDowodu(v) || "Nieprawidłowy numer dowodu",
         },
         peselRules: {
           lengthCheck: (v) =>
@@ -301,9 +304,13 @@ export default {
         nationalityRules: {},
         birthPlaceRules: {},
         issueDateRules: {
-          isInFuture: (v) =>
-            new Date(v) < new Date() ||
-            "Data wydania nie może być z przyszłości",
+          isInBuissnesDay: (v) =>
+            new Date(v).getDay() % 6 !== 0 ||
+            "Dokument nie mógł zostać wydany w sobotę ani w niedzielę",
+          isBeforeExpiry: (v) =>
+            !this.dowod.expiryDate ||
+            new Date(v) < new Date(this.dowod.expiryDate) ||
+            "Data wydania nie może być późniejsza niż termin ważności",
         },
         issuingAuthorityRules: {},
         expiryDateRules: {
@@ -413,19 +420,18 @@ export default {
     },
     isValidSeriaDowodu(v) {
       const seriaDigits = v.toUpperCase().replace(/ /g, "");
-      console.log("seriaTrim :", seriaDigits)
+      console.log("seriaTrim :", seriaDigits);
       let sum =
-        7 * this.getValueFromLetter(seriaDigits[0]) +
-        3 * this.getValueFromLetter(seriaDigits[1]) +
-        1 * this.getValueFromLetter(seriaDigits[2]) +
-        7 * this.getValueFromLetter(seriaDigits[4]) +
-        3 * this.getValueFromLetter(seriaDigits[5]) +
-        1 * this.getValueFromLetter(seriaDigits[6]) +
-        7 * this.getValueFromLetter(seriaDigits[7]) +
-        3 * this.getValueFromLetter(seriaDigits[8]);
-      sum %=10;
-      console.log("seriaTrim :", sum === this.getValueFromLetter(seriaDigits[3]))
-      return sum === this.getValueFromLetter(seriaDigits[3])
+        (7 * this.getValueFromLetter(seriaDigits[0]) +
+          3 * this.getValueFromLetter(seriaDigits[1]) +
+          1 * this.getValueFromLetter(seriaDigits[2]) +
+          7 * this.getValueFromLetter(seriaDigits[4]) +
+          3 * this.getValueFromLetter(seriaDigits[5]) +
+          1 * this.getValueFromLetter(seriaDigits[6]) +
+          7 * this.getValueFromLetter(seriaDigits[7]) +
+          3 * this.getValueFromLetter(seriaDigits[8])) %
+        10;
+      return sum === this.getValueFromLetter(seriaDigits[3]);
     },
     setRules() {
       this.rules = {
@@ -438,7 +444,10 @@ export default {
           this.generalRules.required,
           this.generalRules.onlyLetters,
         ],
-        birthDateRules: [this.generalRules.required],
+        birthDateRules: [
+          this.generalRules.required,
+          this.generalRules.isInFuture,
+        ],
         familyNameRules: [
           this.generalRules.required,
           this.generalRules.onlyLetters,
@@ -468,7 +477,9 @@ export default {
         issueDateRules: [
           this.generalRules.required,
           this.generalRules.isDate,
-          this.rulesList.issueDateRules.isInFuture,
+          this.rulesList.issueDateRules.isBeforeExpiry,
+          this.rulesList.issueDateRules.isInBuissnesDay,
+          this.generalRules.isInFuture,
         ],
         issuingAuthorityRules: [],
         expiryDateRules: [

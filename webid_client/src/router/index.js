@@ -46,6 +46,16 @@ const routes = [
 
     component: () => import("../views/EditDocument.vue"),
   },
+  {
+    path: "/ustawienia",
+    name: "settingsView",
+    meta: {
+      title: "Ustawienia",
+    },
+
+    component: () => import("../views/SettingsView.vue"),
+  },
+
 ];
 
 const router = new VueRouter({

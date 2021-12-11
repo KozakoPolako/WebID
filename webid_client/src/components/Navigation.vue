@@ -27,7 +27,7 @@
               <v-card-text justify-center>
                 <v-col cols="6" justify="center"><v-btn plain @click="$router.push({ name: 'addDocument' })"> Dodaj Dokument </v-btn></v-col>
                 <v-col cols="6"><v-btn plain @click="$router.push({ name: 'documentsView' })"> Moje Dokumenty </v-btn></v-col>
-                <v-col cols="12"><v-btn plain > Zarządzaj kontem </v-btn></v-col>
+                <v-col cols="12"><v-btn plain @click="$router.push({ name: 'settingsView' })"> Ustawienia </v-btn></v-col>
               </v-card-text>
             </v-card>
           </v-menu>
