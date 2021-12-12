@@ -2,11 +2,12 @@
   <nav class="overflow-hidden">
       <v-app-bar
       app
+      elevation="2"
       scroll-target=""
-      flat
       color="green lighten-2"
       outlined
       dense
+      style="z-index:100"
       >
         <v-row align="center">
           <v-col md="2">
