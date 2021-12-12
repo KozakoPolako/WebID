@@ -481,7 +481,9 @@ export default {
           this.rulesList.issueDateRules.isInBuissnesDay,
           this.generalRules.isInFuture,
         ],
-        issuingAuthorityRules: [],
+        issuingAuthorityRules: [
+          this.generalRules.required,
+        ],
         expiryDateRules: [
           this.generalRules.required,
           this.generalRules.isDate,

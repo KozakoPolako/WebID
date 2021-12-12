@@ -6,15 +6,16 @@
       elevate-on-scroll
       color="white"
       class="mt-12"
+      
     >
       <v-row justify="center">
         <v-col cols="12" lg="9" xl="7">
           <v-row dense justify="end" align="center">
-            <v-col cols="auto">
+            <v-col cols="auto" :class="$vuetify.breakpoint.lgAndUp ?  '' : 'd-none'">
               <h2>Dowod: {{ titleText }}</h2>
             </v-col>
             <v-spacer />
-            <v-col cols="12" lg="auto">
+            <v-col cols="6" lg="auto">
               <v-btn
                 color="error"
                 @click="deleteDialog = true"
@@ -27,7 +28,7 @@
                 >
               </v-btn>
             </v-col>
-            <v-col cols="12" lg="2">
+            <v-col cols="6" lg="2">
               <v-btn
                 v-show="!editMode"
                 color="green lighten-2"
@@ -57,6 +58,7 @@
         </v-col>
       </v-row>
     </v-app-bar>
+    <h2 style="margin-top:50px" :class="$vuetify.breakpoint.lgAndUp ?  'd-none' : ''">Dowod: {{ titleText }}</h2>
     <div style="height: 150px"></div>
     <dowod-form :readonly.sync="readonly" />
     <v-dialog v-model="deleteDialog" width="500">
