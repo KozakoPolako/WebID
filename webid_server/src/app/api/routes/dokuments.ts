@@ -6,6 +6,7 @@ import mkdirp from "mkdirp";
 import fs from "fs";
 import { Dowod } from "../../../rec/dowodOsoistyPL";
 import { mongoController } from "../../app";
+import FormValidation from "../../../validation/form-validation";
 
 const router = express.Router();
 
@@ -131,10 +132,13 @@ router.post(
 );
 // aktualizuj dokument
 router.put("/pl/dowod/:docID", jsonParser, async (req, res, next) => {
+  const dowod: Dowod = req.body;
+  
+  console.log(FormValidation.validateDowod(dowod));
   // if (req.body.validate()) {
   try {
     const mongo = new mongoController();
-    const dowod: Dowod = req.body;
+    
     await mongo.updateDocument(dowod, req.params.docID);
 
     res.status(200).json({
