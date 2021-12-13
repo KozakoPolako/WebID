@@ -1,81 +1,40 @@
- export interface DowodRules {
-  names: ((v: string) => boolean | string)[];
-  surname: ((v: string) => boolean | string)[];
-  parentsNames: ((v: string) => boolean | string)[];
-  birthDate: ((v: string) => boolean | string)[];
-  familyName: ((v: string) => boolean | string)[];
-  sex: ((v: string) => boolean | string)[];
-  id: ((v: string) => boolean | string)[];
-  pesel: ((v: string) => boolean | string)[];
-  nationality: ((v: string) => boolean | string)[];
-  birthPlace: ((v: string) => boolean | string)[];
-  issueDate: ((v: string) => boolean | string)[];
-  issuingAuthority: ((v: string) => boolean | string)[];
-  expiryDate: ((v: string) => boolean | string)[];
-  MRZ: ((v: string) => boolean | string)[];
-}
+import DowodOsobistyPL, { Dowod } from "../rec/dowodOsoistyPL";
+import { ValidationRules } from "./form-validation";
+import { parse } from "mrz";
+
+export type DowodRules = Record<keyof Dowod, ValidationRules>;
+
 export default function getDowodRules(): DowodRules {
   return {
-    names: [
-      generalRules.required,
-      generalRules.onlyLetters,
-    ],
-    surname: [
-      generalRules.required,
-      generalRules.onlyLetters,
-    ],
-    parentsNames: [
-      generalRules.required,
-      generalRules.onlyLetters,
-    ],
-    birthDate: [
-      generalRules.required,
-      generalRules.isInFuture,
-    ],
-    familyName: [
-      generalRules.required,
-      generalRules.onlyLetters,
-    ],
-    sex: [
-      generalRules.required,
-      dowodRules.sexRules.sexCheck,
-    ],
-    id: [
-      generalRules.required,
-      dowodRules.idRules.controlCheck,
-    ],
+    names: [generalRules.required, generalRules.onlyLetters],
+    surname: [generalRules.required, generalRules.onlyLetters],
+    parentsNames: [generalRules.required, generalRules.onlyLetters],
+    birthDate: [generalRules.required, generalRules.isInFuture],
+    familyName: [generalRules.required, generalRules.onlyLetters],
+    sex: [generalRules.required, dowodRules.sexRules.sexCheck],
+    id: [generalRules.required, dowodRules.idRules.controlCheck],
     pesel: [
       generalRules.required,
       dowodRules.peselRules.lengthCheck,
       dowodRules.peselRules.dateCheck,
       dowodRules.peselRules.controlCheck,
     ],
-    nationality: [
-      generalRules.required,
-      generalRules.onlyLetters,
-    ],
-    birthPlace: [
-      generalRules.required,
-      generalRules.onlyLetters,
-    ],
+    nationality: [generalRules.required, generalRules.onlyLetters],
+    birthPlace: [generalRules.required, generalRules.onlyLetters],
     issueDate: [
       generalRules.required,
       generalRules.isDate,
       dowodRules.issueDateRules.isInBuissnesDay,
       generalRules.isInFuture,
     ],
-    issuingAuthority: [
-      generalRules.required,
-    ],
+    issuingAuthority: [generalRules.required],
     expiryDate: [
       generalRules.required,
       generalRules.isDate,
       dowodRules.expiryDateRules.expiryCheck,
     ],
-    MRZ: [
-      generalRules.required,
-    ],
-  }
+    MRZ: [generalRules.required, dowodRules.mrzRules.controlCheck],
+  };
 }
 
 const generalRules = {
@@ -149,6 +108,16 @@ const dowodRules = {
         new Date(v).setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0) ||
         "Data ważności dokumentu wygasła"
       );
+    },
+  },
+  mrzRules: {
+    controlCheck: (v: string) => {
+      try {
+        const res = parse(v.trim().split("\n"));
+        return res.valid || "Niepoprawna sekcja MRZ"
+      } catch {
+        return "Niepoprawna sekcja MRZ"
+      }
     },
   },
 };
