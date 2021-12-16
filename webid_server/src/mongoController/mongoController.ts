@@ -290,6 +290,7 @@ class Mongo {
 
       return rules?.value;
     } catch (error) {
+      console.log(`MongoError: ${error}`)
     } finally {
       await this.client.close();
     }

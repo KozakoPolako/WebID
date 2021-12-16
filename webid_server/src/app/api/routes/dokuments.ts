@@ -133,29 +133,29 @@ router.post(
 // aktualizuj dokument
 router.put("/pl/dowod/:docID", jsonParser, async (req, res, next) => {
   const dowod: Dowod = req.body;
-  
-  console.log(FormValidation.validateDowod(dowod));
-  // if (req.body.validate()) {
-  try {
-    const mongo = new mongoController();
-    
-    await mongo.updateDocument(dowod, req.params.docID);
+  const validation = await FormValidation.validateDowod(dowod);
 
-    res.status(200).json({
-      message: "Udało się zapisać dokument",
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(400).json({
-      message: "Formularz zawiera niepoprawne dane",
+  if (typeof validation === "boolean") {
+    try {
+      const mongo = new mongoController();
+
+      await mongo.updateDocument(dowod, req.params.docID);
+
+      res.status(200).json({
+        message: "Udało się zapisać dokument",
+      });
+    } catch (e) {
+      console.log(e);
+      res.status(400).json({
+        message: "Nie udało się zapisać dokumentu",
+      });
+    }
+  } else {
+    res.status(406).json({
+      message: "Nieprawidłowo wypełniony formularz:",
+      errors: validation,
     });
   }
-
-  // } else {
-  //   res.status(400).json ({
-  //     message: "Formularz zawiera niepoprawne dane"
-  //   })
-  // }
 });
 // pobierz liste dokumentów
 router.get("/pl/dowod", async (req, res, next) => {
@@ -215,6 +215,5 @@ router.delete("/pl/dowod/:docID", async (req, res, next) => {
     });
   }
 });
-
 
 export default router;

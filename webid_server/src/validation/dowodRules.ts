@@ -1,40 +1,45 @@
 import DowodOsobistyPL, { Dowod } from "../rec/dowodOsoistyPL";
 import { ValidationRules } from "./form-validation";
 import { parse } from "mrz";
+import mongoController from "../mongoController/mongoController";
 
 export type DowodRules = Record<keyof Dowod, ValidationRules>;
 
-export default function getDowodRules(): DowodRules {
-  return {
-    names: [generalRules.required, generalRules.onlyLetters],
-    surname: [generalRules.required, generalRules.onlyLetters],
-    parentsNames: [generalRules.required, generalRules.onlyLetters],
-    birthDate: [generalRules.required, generalRules.isInFuture],
-    familyName: [generalRules.required, generalRules.onlyLetters],
-    sex: [generalRules.required, dowodRules.sexRules.sexCheck],
-    id: [generalRules.required, dowodRules.idRules.controlCheck],
-    pesel: [
-      generalRules.required,
-      dowodRules.peselRules.lengthCheck,
-      dowodRules.peselRules.dateCheck,
-      dowodRules.peselRules.controlCheck,
-    ],
-    nationality: [generalRules.required, generalRules.onlyLetters],
-    birthPlace: [generalRules.required, generalRules.onlyLetters],
-    issueDate: [
-      generalRules.required,
-      generalRules.isDate,
-      dowodRules.issueDateRules.isInBuissnesDay,
-      generalRules.isInFuture,
-    ],
-    issuingAuthority: [generalRules.required],
-    expiryDate: [
-      generalRules.required,
-      generalRules.isDate,
-      dowodRules.expiryDateRules.expiryCheck,
-    ],
-    MRZ: [generalRules.required, dowodRules.mrzRules.controlCheck],
-  };
+export default async function getDowodRules(): Promise<DowodRules> {
+  const rules = await getCurrentDowodRules();
+
+  return rules
+    ? rules
+    : {
+        names: [generalRules.required, generalRules.onlyLetters],
+        surname: [generalRules.required, generalRules.onlyLetters],
+        parentsNames: [generalRules.required, generalRules.onlyLetters],
+        birthDate: [generalRules.required, generalRules.isInFuture],
+        familyName: [generalRules.required, generalRules.onlyLetters],
+        sex: [generalRules.required, dowodRules.sexRules.sexCheck],
+        id: [generalRules.required, dowodRules.idRules.controlCheck],
+        pesel: [
+          generalRules.required,
+          dowodRules.peselRules.lengthCheck,
+          dowodRules.peselRules.dateCheck,
+          dowodRules.peselRules.controlCheck,
+        ],
+        nationality: [generalRules.required, generalRules.onlyLetters],
+        birthPlace: [generalRules.required, generalRules.onlyLetters],
+        issueDate: [
+          generalRules.required,
+          generalRules.isDate,
+          dowodRules.issueDateRules.isInBuissnesDay,
+          generalRules.isInFuture,
+        ],
+        issuingAuthority: [generalRules.required],
+        expiryDate: [
+          generalRules.required,
+          generalRules.isDate,
+          dowodRules.expiryDateRules.expiryCheck,
+        ],
+        MRZ: [generalRules.required, dowodRules.mrzRules.controlCheck],
+      };
 }
 
 const generalRules = {
@@ -53,7 +58,10 @@ const dowodRules = {
   namesRules: {},
   surnameRules: {},
   parentsNamesRules: {},
-  birthDateRules: {},
+  birthDateRules: {
+    isAdults: (v: string) =>
+      yearBetween(new Date(v)) >= 18 || "Musisz mieć 18 lat",
+  },
   familyNameRules: {},
   sexRules: {
     sexCheck: (v: string) => /[KM]/.test(v) || "K - Kobieta M - Mężczyzna",
@@ -114,9 +122,9 @@ const dowodRules = {
     controlCheck: (v: string) => {
       try {
         const res = parse(v.trim().split("\n"));
-        return res.valid || "Niepoprawna sekcja MRZ"
+        return res.valid || "Niepoprawna sekcja MRZ";
       } catch {
-        return "Niepoprawna sekcja MRZ"
+        return "Niepoprawna sekcja MRZ";
       }
     },
   },
@@ -182,4 +190,82 @@ function isValidSeriaDowodu(v: string) {
       3 * getValueFromLetter(seriaDigits[8])) %
     10;
   return sum === getValueFromLetter(seriaDigits[3]);
+}
+
+async function getCurrentDowodRules(): Promise<DowodRules | undefined> {
+  const mongo = new mongoController();
+
+  const currentRules = await mongo.getDowodValidateRules();
+  if (!currentRules) return undefined;
+  return {
+    names: [generalRules.required, generalRules.onlyLetters],
+    surname: [generalRules.required, generalRules.onlyLetters],
+    parentsNames: [generalRules.required, generalRules.onlyLetters],
+    birthDate: currentRules.isAdultsOnly
+      ? [
+          generalRules.required,
+          generalRules.isInFuture,
+          dowodRules.birthDateRules.isAdults,
+        ]
+      : [generalRules.required, generalRules.isInFuture],
+    familyName: [generalRules.required, generalRules.onlyLetters],
+    sex: [generalRules.required, dowodRules.sexRules.sexCheck],
+    id: currentRules.isIDControl
+      ? [generalRules.required, dowodRules.idRules.controlCheck]
+      : [generalRules.required],
+    pesel: currentRules.isPeselControl
+      ? [
+          generalRules.required,
+          dowodRules.peselRules.lengthCheck,
+          dowodRules.peselRules.dateCheck,
+          dowodRules.peselRules.controlCheck,
+        ]
+      : [
+          generalRules.required,
+          dowodRules.peselRules.lengthCheck,
+          dowodRules.peselRules.dateCheck,
+        ],
+    nationality: [generalRules.required, generalRules.onlyLetters],
+    birthPlace: [generalRules.required, generalRules.onlyLetters],
+    issueDate: currentRules.isIssueDateCorrect
+      ? [
+          generalRules.required,
+          generalRules.isDate,
+          dowodRules.issueDateRules.isInBuissnesDay,
+          generalRules.isInFuture,
+        ]
+      : [generalRules.required, generalRules.isDate],
+    issuingAuthority: [generalRules.required],
+    expiryDate: currentRules.isNotExpired
+      ? [
+          generalRules.required,
+          generalRules.isDate,
+          dowodRules.expiryDateRules.expiryCheck,
+        ]
+      : [generalRules.required, generalRules.isDate],
+    MRZ: currentRules.isMRZContol
+      ? [generalRules.required, dowodRules.mrzRules.controlCheck]
+      : [generalRules.required],
+  };
+}
+
+function yearBetween(oldDate: Date): Number {
+  const today = new Date();
+
+  const yToday = today.getFullYear();
+  const mToday = today.getMonth();
+  const dToday = today.getDate();
+
+  const yOld = oldDate.getFullYear();
+  const mOld = oldDate.getMonth();
+  const dOld = oldDate.getDate();
+
+  let years = yToday - yOld;
+  if (mOld > mToday) years--;
+  else {
+    if (mOld == mToday) {
+      if (dOld > dToday) years--;
+    }
+  }
+  return years;
 }
