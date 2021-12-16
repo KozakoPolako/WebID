@@ -3,7 +3,7 @@ import axios from "axios";
 const resURI = "http://localhost:3000/api";
 
 const state = {
-  rules: {},
+  rules: null,
 };
 
 const getters = {
