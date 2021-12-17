@@ -2,7 +2,7 @@
   <v-container class="pa-6">
     <v-row justify="caneter">
       <v-col v-for="dowod in items" :key="dowod.id" cols="12" lg="3" sm="6">
-        <v-card class="pa-0 rounded-lg green lighten-3">
+        <v-card class="pa-0 rounded-lg green">
           <v-card-title class="py-1">Dowod:</v-card-title>
           <v-card-text
             class="white rounded-lg pa-2 ml-2 dowod-img"

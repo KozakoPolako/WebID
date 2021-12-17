@@ -1,87 +1,48 @@
-// import axios from "axios";
+import axios from "axios";
 
-// const resURI = "http://localhost:3000/api";
-
-// export const rules = {
-//   namesRules: [],
-//   surnameRules: [],
-//   parentsNamesRules: [],
-//   birthDateRules: [],
-//   familyNameRules: [],
-//   sexRules: [],
-//   idRules: [],
-//   peselRules: [],
-//   nationalityRules: [],
-//   birthPlaceRules: [],
-//   issueDateRules: [],
-//   issuingAuthorityRules: [],
-//   expiryDateRules: [],
-// };
-// const dowod = {
-//   names: "",
-//   surname: "",
-//   parentsNames: "",
-//   birthDate: "",
-//   familyName: "",
-//   sex: "",
-//   id: "",
-//   pesel: "",
-//   nationality: "",
-//   birthPlace: "",
-//   issueDate: "",
-//   issuingAuthority: "",
-//   expiryDate: "",
-// },
+const resURI = "http://localhost:3000/api";
 
 const state = {
-  rules: {
-    namesRules: [],
-    surnameRules: [],
-    parentsNamesRules: [],
-    birthDateRules: [],
-    familyNameRules: [],
-    sexRules: [],
-    idRules: [],
-    peselRules: [
-      (v) => !!v || "Pole wymagane",
-      (v) => /^[0-9]{11}$/.test(v) || "Numer Pesel musi zawierać 11 cyfr",
-      (v) => (parseInt(v.substring(4, 6)) <= 31 && parseInt(v.substring(2, 4)) <= 12) || "Nieprawidłowy numer Pesel Data", // sprawdzenie czy liczby zawiewierające rok urodzenia są poprawna datą
-      (v) => {
-        console.log(this.dowod.names)
-        const digits = ("" + v).split("");
-        let checksum =
-          (1 * parseInt(digits[0]) +
-            3 * parseInt(digits[1]) +
-            7 * parseInt(digits[2]) +
-            9 * parseInt(digits[3]) +
-            1 * parseInt(digits[4]) +
-            3 * parseInt(digits[5]) +
-            7 * parseInt(digits[6]) +
-            9 * parseInt(digits[7]) +
-            1 * parseInt(digits[8]) +
-            3 * parseInt(digits[9])) %
-          10;
-        if (checksum == 0) {
-          checksum = 10;
-        }
-        checksum = 10 - checksum;
-        return parseInt(digits[10]) === checksum || "Nieprawidłowy numer Pesel"; // sprawdzenie sumy kontrolnej
-      },
-    ],
-    nationalityRules: [],
-    birthPlaceRules: [],
-    issueDateRules: [],
-    issuingAuthorityRules: [],
-    expiryDateRules: [],
-  },
+  rules: null,
 };
 
 const getters = {
   getDowodRules: (state) => state.rules,
 };
 
-const actions = {};
-const mutations = {};
+const actions = {
+  async fetchDowodRules({ commit }) {
+    const response = await axios.get(`${resURI}/ustawienia/walidacja/dowod`);
+    commit("SET_DOWOD_RULES", response.data);
+  },
+  // eslint-disable-next-line no-unused-vars
+  async updateDowodRules({ commit }, newRules ) {
+    const payload = {
+      isNotExpired: newRules.isNotExpired,
+      isIssueDateCorrect: newRules.isIssueDateCorrect,
+      isPeselControl: newRules.isPeselControl,
+      isIDControl: newRules.isIDControl,
+      isMRZContol: newRules.isMRZContol,
+      isAdultsOnly: newRules.isAdultsOnly,
+      isData_MRZValid: newRules.isData_MRZValid,
+    };
+    console.log("payload", payload , newRules);
+    await axios.put(`${resURI}/ustawienia/walidacja/dowod`, payload);
+  },
+};
+const mutations = {
+  SET_DOWOD_RULES: (state, payload) => {
+    state.rules = "rules" in payload ? {
+      isNotExpired: payload.rules.isNotExpired ? true : false,
+      isIssueDateCorrect: payload.rules.isIssueDateCorrect ? true : false,
+      isPeselControl: payload.rules.isPeselControl ? true : false,
+      isIDControl: payload.rules.isIDControl ? true : false,
+      isMRZContol: payload.rules.isMRZContol ? true : false,
+      isAdultsOnly: payload.rules.isAdultsOnly ? true : false,
+      isData_MRZValid: payload.rules.isData_MRZValid ? true : false,
+    } : null;
+  },
+};
 
 export default {
   state,

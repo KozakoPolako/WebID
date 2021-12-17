@@ -6,7 +6,7 @@ import { performance } from "perf_hooks"
 import dowodOsobistyWorkers from "./dowodOsobistyWorkers";
 import path from "path";
 
-export interface Dowod {
+export type Dowod = {
   names: string;
   surname: string;
   parentsNames: string;

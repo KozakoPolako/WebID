@@ -16,6 +16,11 @@ import { Dowod } from "../rec/dowodOsoistyPL";
 
 const CONNECTION_STRING = `mongodb://${process.env.MONGO_LOGIN}:${process.env.MONGO_PASSWORD}@webid-db`;
 
+enum Documents {
+  DOWOD,
+  PASZPORT,
+}
+
 interface documentData {
   documentData: Dowod;
   creationDate: Date;
@@ -29,11 +34,27 @@ export interface DowodPLDocument {
   saved: boolean;
   dataHistory: documentData[];
 }
+interface ValidateSettings {
+  type: Documents;
+  lastChange: Date;
+  value: DowodPLValidateRules;
+}
+export interface DowodPLValidateRules {
+  isNotExpired: boolean;
+  isIssueDateCorrect: boolean;
+  isPeselControl: boolean;
+  isIDControl: boolean;
+  isMRZContol: boolean;
+  isAdultsOnly: boolean;
+  isData_MRZValid: boolean;
+}
 
 class Mongo {
   client: MongoClient;
   database: Db | undefined;
   documentsCol: Collection<DowodPLDocument> | undefined;
+  settingsCol: Collection<ValidateSettings> | undefined;
+
   usersCol: Collection<Document> | undefined;
   photosBucket: GridFSBucket | undefined;
 
@@ -186,7 +207,7 @@ class Mongo {
         throw new Error("Nie udało się usunąć dokumentu");
       }
     } catch (error) {
-      console.log(`Dind Error: ${error}`);
+      console.log(`Delete Error: ${error}`);
     } finally {
       await this.client.close();
     }
@@ -250,6 +271,61 @@ class Mongo {
         });
       });
     }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //  Ustawnienia
+  ////////////////////////////////////////////////////////////////////////////////////////
+  async getDowodValidateRules(): Promise<DowodPLValidateRules | undefined> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.settingsCol = this.database.collection("ustawnienia");
+
+      const filter = {
+        type: Documents.DOWOD,
+      };
+
+      const rules = await this.settingsCol.findOne(filter);
+
+      return rules?.value;
+    } catch (error) {
+      console.log(`MongoError: ${error}`)
+    } finally {
+      await this.client.close();
+    }
+    return undefined;
+  }
+  async setDowodValidateRules(newRules: DowodPLValidateRules): Promise<void> {
+    try {
+        await this.client.connect();
+        this.database = this.client.db("WebID");
+        this.settingsCol = this.database.collection("ustawnienia");
+
+        const filter = {
+          type: Documents.DOWOD,
+        };
+        const update = {
+          $set: {
+            type: Documents.DOWOD,
+            lastChange: new Date(),
+            value: newRules,
+          },
+        }
+        const options = {
+          upsert: true,
+        }
+
+        const result = await this.settingsCol.updateOne(filter,update,options)
+        console.log(
+          `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+        );
+      
+      } catch (error) {
+      
+      } finally {
+        await this.client.close();
+      }
   }
 }
 

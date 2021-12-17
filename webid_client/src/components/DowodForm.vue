@@ -255,18 +255,24 @@ export default {
         onlyLetters: (v) =>
           /^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ ]+$/.test(v) ||
           "Wprowadzono niedozwolone znaki",
+        isInFuture: (v) =>
+          new Date(v) < new Date() || "Data wydania nie może być z przyszłości",
       },
       rulesList: {
         namesRules: {},
         surnameRules: {},
         parentsNamesRules: {},
-        birthDateRules: {},
+        birthDateRules: {
+          isAdults: (v) =>
+            this.yearBetween(new Date(v)) >= 18 || "Musisz mieć 18 lat",
+        },
         familyNameRules: {},
         sexRules: {
           sexCheck: (v) => /[KM]/.test(v) || "K - Kobieta M - Mężczyzna",
         },
         idRules: {
-          controlCheck: (v) => this.isValidSeriaDowodu(v) || "Nieprawidłowy numer dowodu",
+          controlCheck: (v) =>
+            this.isValidSeriaDowodu(v) || "Nieprawidłowy numer dowodu",
         },
         peselRules: {
           lengthCheck: (v) =>
@@ -301,9 +307,13 @@ export default {
         nationalityRules: {},
         birthPlaceRules: {},
         issueDateRules: {
-          isInFuture: (v) =>
-            new Date(v) < new Date() ||
-            "Data wydania nie może być z przyszłości",
+          isInBuissnesDay: (v) =>
+            new Date(v).getDay() % 6 !== 0 ||
+            "Dokument nie mógł zostać wydany w sobotę ani w niedzielę",
+          isBeforeExpiry: (v) =>
+            !this.dowod.expiryDate ||
+            new Date(v) < new Date(this.dowod.expiryDate) ||
+            "Data wydania nie może być późniejsza niż termin ważności",
         },
         issuingAuthorityRules: {},
         expiryDateRules: {
@@ -321,8 +331,14 @@ export default {
   computed: {
     ...mapGetters(["getCurrentDowod", "getDowodRules"]),
   },
-  mounted() {
-    this.setRules();
+  async mounted() {
+    try {
+      await this.fetchDowodRules();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      this.setRules();
+    }
   },
   watch: {
     getCurrentDowod: {
@@ -341,7 +357,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["updateDowod", "fetchDowod"]),
+    ...mapActions(["updateDowod", "fetchDowod", "fetchDowodRules"]),
     async saveDowod() {
       if (this.$refs.dowodForm.validate()) {
         try {
@@ -358,8 +374,12 @@ export default {
             });
           }
         } catch (error) {
-          console.log(error);
-          this.$toast.error(`Error: ${error.data.message}`);
+          const errorText = [error.response.data.message];
+          if (error.response.status === 406) {
+            errorText.push(...error.response.data.errors);
+          }
+          console.log(errorText)
+          this.$toast.error(`${errorText.join("\n")}`);
         } finally {
           this.saveLoading = false;
         }
@@ -413,70 +433,171 @@ export default {
     },
     isValidSeriaDowodu(v) {
       const seriaDigits = v.toUpperCase().replace(/ /g, "");
-      console.log("seriaTrim :", seriaDigits)
+      console.log("seriaTrim :", seriaDigits);
       let sum =
-        7 * this.getValueFromLetter(seriaDigits[0]) +
-        3 * this.getValueFromLetter(seriaDigits[1]) +
-        1 * this.getValueFromLetter(seriaDigits[2]) +
-        7 * this.getValueFromLetter(seriaDigits[4]) +
-        3 * this.getValueFromLetter(seriaDigits[5]) +
-        1 * this.getValueFromLetter(seriaDigits[6]) +
-        7 * this.getValueFromLetter(seriaDigits[7]) +
-        3 * this.getValueFromLetter(seriaDigits[8]);
-      sum %=10;
-      console.log("seriaTrim :", sum === this.getValueFromLetter(seriaDigits[3]))
-      return sum === this.getValueFromLetter(seriaDigits[3])
+        (7 * this.getValueFromLetter(seriaDigits[0]) +
+          3 * this.getValueFromLetter(seriaDigits[1]) +
+          1 * this.getValueFromLetter(seriaDigits[2]) +
+          7 * this.getValueFromLetter(seriaDigits[4]) +
+          3 * this.getValueFromLetter(seriaDigits[5]) +
+          1 * this.getValueFromLetter(seriaDigits[6]) +
+          7 * this.getValueFromLetter(seriaDigits[7]) +
+          3 * this.getValueFromLetter(seriaDigits[8])) %
+        10;
+      return sum === this.getValueFromLetter(seriaDigits[3]);
+    },
+    yearBetween(oldDate) {
+      const today = new Date();
+
+      const yToday = today.getFullYear();
+      const mToday = today.getMonth();
+      const dToday = today.getDate();
+
+      const yOld = oldDate.getFullYear();
+      const mOld = oldDate.getMonth();
+      const dOld = oldDate.getDate();
+
+      let years = yToday - yOld;
+      if (mOld > mToday) years--;
+      else {
+        if (mOld == mToday) {
+          if (dOld > dToday) years--;
+        }
+      }
+      return years;
     },
     setRules() {
-      this.rules = {
-        namesRules: [this.generalRules.required, this.generalRules.onlyLetters],
-        surnameRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        parentsNamesRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        birthDateRules: [this.generalRules.required],
-        familyNameRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        sexRules: [
-          this.generalRules.required,
-          this.rulesList.sexRules.sexCheck,
-        ],
-        idRules: [
-          this.generalRules.required,
-          this.rulesList.idRules.controlCheck,
-        ],
-        peselRules: [
-          this.generalRules.required,
-          this.rulesList.peselRules.lengthCheck,
-          this.rulesList.peselRules.dateCheck,
-          this.rulesList.peselRules.controlCheck,
-        ],
-        nationalityRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        birthPlaceRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        issueDateRules: [
-          this.generalRules.required,
-          this.generalRules.isDate,
-          this.rulesList.issueDateRules.isInFuture,
-        ],
-        issuingAuthorityRules: [],
-        expiryDateRules: [
-          this.generalRules.required,
-          this.generalRules.isDate,
-          this.rulesList.expiryDateRules.expiryCheck,
-        ],
-      };
+      this.rules = this.getDowodRules
+        ? {
+            namesRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            surnameRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            parentsNamesRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthDateRules: this.getDowodRules.isAdultsOnly
+              ? [
+                  this.generalRules.required,
+                  this.generalRules.isInFuture,
+                  this.rulesList.birthDateRules.isAdults,
+                ]
+              : [this.generalRules.required, this.generalRules.isInFuture],
+            familyNameRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            sexRules: [
+              this.generalRules.required,
+              this.rulesList.sexRules.sexCheck,
+            ],
+            idRules: this.getDowodRules.isIDControl
+              ? [
+                  this.generalRules.required,
+                  this.rulesList.idRules.controlCheck,
+                ]
+              : [this.generalRules.required],
+            peselRules: this.getDowodRules.isPeselControl
+              ? [
+                  this.generalRules.required,
+                  this.rulesList.peselRules.lengthCheck,
+                  this.rulesList.peselRules.dateCheck,
+                  this.rulesList.peselRules.controlCheck,
+                ]
+              : [
+                  this.generalRules.required,
+                  this.rulesList.peselRules.lengthCheck,
+                  this.rulesList.peselRules.dateCheck,
+                ],
+            nationalityRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthPlaceRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            issueDateRules: this.getDowodRules.isIssueDateCorrect
+              ? [
+                  this.generalRules.required,
+                  this.generalRules.isDate,
+                  this.rulesList.issueDateRules.isBeforeExpiry,
+                  this.rulesList.issueDateRules.isInBuissnesDay,
+                  this.generalRules.isInFuture,
+                ]
+              : [this.generalRules.required, this.generalRules.isDate],
+            issuingAuthorityRules: [this.generalRules.required],
+            expiryDateRules: this.getDowodRules.isNotExpired
+              ? [
+                  this.generalRules.required,
+                  this.generalRules.isDate,
+                  this.rulesList.expiryDateRules.expiryCheck,
+                ]
+              : [this.generalRules.required, this.generalRules.isDate],
+          }
+        : {
+            namesRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            surnameRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            parentsNamesRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthDateRules: [
+              this.generalRules.required,
+              this.generalRules.isInFuture,
+              this.rulesList.birthDateRules.isAdults,
+            ],
+            familyNameRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            sexRules: [
+              this.generalRules.required,
+              this.rulesList.sexRules.sexCheck,
+            ],
+            idRules: [
+              this.generalRules.required,
+              this.rulesList.idRules.controlCheck,
+            ],
+            peselRules: [
+              this.generalRules.required,
+              this.rulesList.peselRules.lengthCheck,
+              this.rulesList.peselRules.dateCheck,
+              this.rulesList.peselRules.controlCheck,
+            ],
+            nationalityRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthPlaceRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            issueDateRules: [
+              this.generalRules.required,
+              this.generalRules.isDate,
+              this.rulesList.issueDateRules.isBeforeExpiry,
+              this.rulesList.issueDateRules.isInBuissnesDay,
+              this.generalRules.isInFuture,
+            ],
+            issuingAuthorityRules: [this.generalRules.required],
+            expiryDateRules: [
+              this.generalRules.required,
+              this.generalRules.isDate,
+              this.rulesList.expiryDateRules.expiryCheck,
+            ],
+          };
     },
   },
 };
