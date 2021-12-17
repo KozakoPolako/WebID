@@ -1,6 +1,6 @@
 import express, { Request, Response, Application } from "express";
 import cors from "cors";
-import dokuments from "./api/routes/dokuments";
+import dokuments from "./api/routes/documents";
 import ustawienia from "./api/routes/ustawienia";
 import mongoController from "../mongoController/mongoController";
 

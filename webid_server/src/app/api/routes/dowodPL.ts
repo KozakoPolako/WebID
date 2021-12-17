@@ -48,13 +48,13 @@ const upload = multer({
   },
 });
 
-router.get("/", (req, res, next) => {
-  res.status(200).json({
-    message: "TODO",
-  });
-});
+// router.get("/", (req, res, next) => {
+//   res.status(200).json({
+//     message: "TODO",
+//   });
+// });
 //pobierz zdjęcie z dowodu
-router.get("/pl/dowod/zdjecie/:photo/:docID", async (req, res, next) => {
+router.get("/zdjecie/:photo/:docID", async (req, res, next) => {
   const mongo = new mongoController();
   const document = await mongo.getDowod(req.params.docID);
   if (document) {
@@ -83,7 +83,7 @@ router.get("/pl/dowod/zdjecie/:photo/:docID", async (req, res, next) => {
 
 // wysałanie dowodu do rozpoznania
 router.post(
-  "/pl/dowod",
+  "/",
   upload.array("dowodImage", 2),
   async (req, res, next) => {
     //console.log(req.files);
@@ -131,7 +131,7 @@ router.post(
   }
 );
 // aktualizuj dokument
-router.put("/pl/dowod/:docID", jsonParser, async (req, res, next) => {
+router.put("/:docID", jsonParser, async (req, res, next) => {
   const dowod: Dowod = req.body;
   const validation = await FormValidation.validateDowod(dowod);
 
@@ -158,7 +158,7 @@ router.put("/pl/dowod/:docID", jsonParser, async (req, res, next) => {
   }
 });
 // pobierz liste dokumentów
-router.get("/pl/dowod", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   const mongo = new mongoController();
   const documents = await mongo.getDowods();
   if (documents) {
@@ -180,7 +180,7 @@ router.get("/pl/dowod", async (req, res, next) => {
 });
 
 // pobierz dokument
-router.get("/pl/dowod/:docID", async (req, res, next) => {
+router.get("/:docID", async (req, res, next) => {
   const mongo = new mongoController();
   const recordID = req.params.docID;
   const document = await mongo.getDowod(recordID);
@@ -201,7 +201,7 @@ router.get("/pl/dowod/:docID", async (req, res, next) => {
 });
 
 // usuń dokument
-router.delete("/pl/dowod/:docID", async (req, res, next) => {
+router.delete("/:docID", async (req, res, next) => {
   const mongo = new mongoController();
   const recordID = req.params.docID;
   try {

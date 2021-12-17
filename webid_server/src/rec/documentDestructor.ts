@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import { Console } from "console";
 
-export async function destructDowod(
+export async function destructDocument(
   filepath: string,
   side: string,
   output: boolean

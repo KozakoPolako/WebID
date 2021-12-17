@@ -1,9 +1,9 @@
 import { Multer } from "multer";
 import { spawn } from "child_process";
 import Tesseract, { createWorker } from "tesseract.js";
-import { destructDowod } from "./dowodDestructor";
+import { destructDocument } from "./documentDestructor";
 import { performance } from "perf_hooks"
-import dowodOsobistyWorkers from "./dowodOsobistyWorkers";
+import DowodWorkers from "./dowodOsobistyWorkers";
 import path from "path";
 
 export type Dowod = {
@@ -27,7 +27,7 @@ enum Sex {
   Man,
   Woman,
 }
-const Workers = new dowodOsobistyWorkers(); 
+const Workers = new DowodWorkers(); 
 class DowodOsobistyPL {
   id: string;
   surname: string;
@@ -92,8 +92,8 @@ class DowodOsobistyPL {
     // let expiryDate: string = "error";
     // let MRZ :string = "error"
     try {
-      await destructDowod(front.toString(), "front", false);
-      await destructDowod(back, "back", false);
+      await destructDocument(front.toString(), "front", false);
+      await destructDocument(back, "back", false);
 
 
       const frontName = path.basename(front);
@@ -112,7 +112,7 @@ class DowodOsobistyPL {
       return dowod
     } catch (e) {
       console.log(e);
-      throw new Error(e+'');
+      throw new Error(`DowodParseError: ${e}`);
     } finally {
       const end  = performance.now() 
       console.log(`Rozpoznawanie trwało:  ${(end - start)/1000} s`);

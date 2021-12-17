@@ -23,7 +23,7 @@ class DowodWorkers {
       await this.workers[i].loadLanguage("pol");
       await this.workers[i].initialize("pol");
     }
-    console.log("workers ready...")
+    console.log("dowodWorkers ready...")
   }
   prepareText(text:string) : string {
     let output = text.replace(/\n/g, " ");

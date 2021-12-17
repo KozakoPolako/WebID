@@ -30,6 +30,7 @@ services:
       target: "dev-stage"
     volumes:
       - ./webid_server/src:/usr/src/app/src
+      - ./webid_server/temporary:/usr/src/app/temporary
     ports:
       - 3000:3000
     depends_on:
