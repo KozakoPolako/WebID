@@ -26,6 +26,10 @@ export default class FormValidation {
 
     return errors.length ? errors : true;
   }
+
+  ///////////////////////////////////////////////////////////////////////
+  // Dowod 
+  ///////////////////////////////////////////////////////////////////////
   static async validateDowod(dowod: Dowod): Promise<boolean | string[]> {
     const dowodRules = await getDowodRules();
     const firstStep = this.validate(dowod, dowodRules);
@@ -129,4 +133,7 @@ export default class FormValidation {
     }
     return errors.length > 1 ? errors : true;
   }
+  ///////////////////////////////////////////////////////////////////////
+  // Paszport
+  ///////////////////////////////////////////////////////////////////////
 }
