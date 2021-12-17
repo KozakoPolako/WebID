@@ -81,62 +81,78 @@ def cropFace(filename) :
   cropedFace = face[141:475, 20:281]
   cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
 
+
+#Start#################################################################################
 img = cv2.imread(pathImage)
 ori = img.copy()
 imgContours = img
-imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-img_blur = cv2.GaussianBlur(img,(5,5),1)
-
-for thr1 in threshold1 :
-  for thr2 in threshold2 :
-    edges = cv2.Canny(img_blur, thr1, thr2)
-    kernel = np.ones((5, 5))
-    imgDial = cv2.dilate(edges, kernel, iterations=2)
-    imgThreshold = cv2.erode(imgDial, kernel, iterations=1)
-    contours = cv2.findContours(imgThreshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = imutils.grab_contours(contours)
-    contours = sorted(contours, key= cv2.contourArea, reverse= True) [:10]
-    for cnt in contours:
-      if cv2.contourArea(cnt) > 5000:
-        peri = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.04 * peri, True)
-        if len(approx) == 4:
-          documentPos.append(approx)
-#documentPos = sorted(documentPos, key= cv2.contourArea, reverse= True) [:1]
-if len(documentPos) :
+if (mode =='passport') :
+  document = ori
   fileName = (pathImage.split("/")[-1]).split(".")[0]
   fileName = (fileName.split("\\")[-1])
   if not os.path.exists(outputDir+fileName) :
     os.makedirs(outputDir+fileName)
-  dowodContur = findDowod(documentPos, dowodRatio)
-
   print("filename = "+fileName)
-  #rysowanie wszystkich znalezionych prostokatow
+else :
+  imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  img_blur = cv2.GaussianBlur(img,(5,5),1)
 
-  # for approx in documentPos :
-  #   cv2.drawContours(imgContours, [approx], -1, (0,255,0), 3)
+  for thr1 in threshold1 :
+    for thr2 in threshold2 :
+      edges = cv2.Canny(img_blur, thr1, thr2)
+      kernel = np.ones((5, 5))
+      imgDial = cv2.dilate(edges, kernel, iterations=2)
+      imgThreshold = cv2.erode(imgDial, kernel, iterations=1)
+      contours = cv2.findContours(imgThreshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+      contours = imutils.grab_contours(contours)
+      contours = sorted(contours, key= cv2.contourArea, reverse= True) [:10]
+      for cnt in contours:
+        if cv2.contourArea(cnt) > 5000:
+          peri = cv2.arcLength(cnt, True)
+          approx = cv2.approxPolyDP(cnt, 0.04 * peri, True)
+          if len(approx) == 4:
+            documentPos.append(approx)
+  #documentPos = sorted(documentPos, key= cv2.contourArea, reverse= True) [:1]
+  if len(documentPos) :
+    fileName = (pathImage.split("/")[-1]).split(".")[0]
+    fileName = (fileName.split("\\")[-1])
+    if not os.path.exists(outputDir+fileName) :
+      os.makedirs(outputDir+fileName)
+    dowodContur = findDowod(documentPos, dowodRatio)
 
-  # rysowanie wybranego prostokata
+    print("filename = "+fileName)
+    #rysowanie wszystkich znalezionych prostokatow
 
-  # cv2.drawContours(imgContours, [dowodContur], -1, (0,255,0), 3)
-  # cv2.imshow("test", cv2.resize(imgContours, (0, 0), fx=0.5, fy=0.5))
-  # cv2.waitKey()
-  
-  document = wrapTransform(dowodContur,ori)
-  docH = document.shape[0]
-  docW = document.shape[1]
+    # for approx in documentPos :
+    #   cv2.drawContours(imgContours, [approx], -1, (0,255,0), 3)
+
+    # rysowanie wybranego prostokata
+
+    # cv2.drawContours(imgContours, [dowodContur], -1, (0,255,0), 3)
+    # cv2.imshow("test", cv2.resize(imgContours, (0, 0), fx=0.5, fy=0.5))
+    # cv2.waitKey()
+    
+    document = wrapTransform(dowodContur,ori)
+    docH = document.shape[0]
+    docW = document.shape[1]
 
   #nazyw mask 
   front = ["face.jpg","surname.jpg","names.jpg","familyname.jpg","parentsname.jpg","birthdate.jpg","sex.jpg"]
-  # TODO
+  #
   back = ["MRZ.jpg","id.jpg","birthplace.jpg","expirydate.jpg","inssuingauthority.jpg","issuedate.jpg","nationality.jpg","pesel.jpg"]
+  #
+  passport = ["BirthDate.jpg","BirthPlace.jpg","Code.jpg","ExpairyDate.jpg","Face.jpg","ID.jpg","IssueAuthority.jpg","IssueDate.jpg","MRZ.jpg","Names.jpg","Nationality.jpg","Pesel.jpg","Pesel.jpg","Signature.jpg","Surname.jpg","Type.jpg"]
 
   # Wybor trybu 
   current = []
   if ( mode == "front" ) :
     current = front
-  else :
+  elif ( mode == "back") :
     current = back
+  elif ( mode == "passport") :
+    current = passport
+  else :
+    raise Exception("Invalid arguments")
 
   print(mode)
   # Wyznaczanie rozmiaru maski oraz zmiana rozmiaru dokumentu
