@@ -52,7 +52,7 @@ router.post("/", upload.single("paszportImage"), async (req,res,next) =>{
   if (req.file) {
     try {
       const temp = await PaszportPL.getDocumentFromPhoto (req.file.path)
-      console.log("Skończyłem");
+      console.log("Skończyłem",req.file);
       console.dir(temp);
       res.status(200).json({
         message: "Udało się HURAAAA"

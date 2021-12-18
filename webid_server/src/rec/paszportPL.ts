@@ -1,6 +1,6 @@
 import { destructDocument } from "./documentDestructor";
 import { performance } from "perf_hooks";
-import PaszportWorkers from "./paszportWorkers"
+import PaszportWorkers from "./tesseractWorkers"
 import path from "path";
 
 export type Paszport = {
@@ -20,7 +20,8 @@ export type Paszport = {
   MRZ: string;
 };
 
-const Workers = new PaszportWorkers()
+const Workers = PaszportWorkers
+
 
 export default class PaszportPL {
   static async getDocumentFromPhoto(passport: string): Promise<Paszport> {

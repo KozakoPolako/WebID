@@ -1,9 +1,10 @@
 import Tesseract, { createWorker } from "tesseract.js";
 import { Dowod } from "./dowodOsoistyPL";
+import { Paszport } from "./paszportPL";
 
 
 
-class DowodWorkers {
+class TesseractWorkers {
   workers: Tesseract.Worker[] = [];
   dateRegex = /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )(((0)[0-9])|((1)[0-2]))(\/|\.|\-|\ )\d{4}/
   LetersList = "AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ "
@@ -23,7 +24,7 @@ class DowodWorkers {
       await this.workers[i].loadLanguage("pol");
       await this.workers[i].initialize("pol");
     }
-    console.log("dowodWorkers ready...")
+    console.log("workers ready...")
   }
   prepareText(text:string) : string {
     let output = text.replace(/\n/g, " ");
@@ -297,6 +298,27 @@ class DowodWorkers {
       return dowod;
     }
   }
+  
+  async recognisePaszport(passportName: string): Promise<Paszport> {
+    const passport: Paszport = {
+      names: "error",
+      surname: "error",
+      birthDate: "error",
+      sex: "error",
+      id: "error",
+      type: "error",
+      code: "error",
+      pesel: "error",
+      nationality: "error",
+      birthPlace: "error",
+      issueDate: "error",
+      issuingAuthority: "error",
+      expiryDate: "error",
+      MRZ: "error",
+    };
+
+    return passport;
+  }
 }
-export default DowodWorkers;
+export default  new TesseractWorkers();
 

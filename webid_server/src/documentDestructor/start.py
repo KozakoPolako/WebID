@@ -76,9 +76,14 @@ def wrapTransform(cnt, img) :
   return wrap
 
 def cropFace(filename) : 
-  face = cv2.imread(outputDir+fileName+"/face.jpg")
+  face = cv2.imread(outputDir+fileName+"/document.jpg")
   [[[281, 141]],[[ 20, 141]],[[ 20, 475]],[[281, 475]]]
   cropedFace = face[141:475, 20:281]
+  cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
+def cropFacePassport(filename) :
+  face = cv2.imread(outputDir+fileName+"/document.jpg")
+  [[[1040, 576]],[[ 50, 576]],[[ 50, 1755]],[[1040, 1755]]]
+  cropedFace = face[576:1755, 50:1040]
   cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
 
 
@@ -136,48 +141,50 @@ else :
     docH = document.shape[0]
     docW = document.shape[1]
 
-  #nazyw mask 
-  front = ["face.jpg","surname.jpg","names.jpg","familyname.jpg","parentsname.jpg","birthdate.jpg","sex.jpg"]
-  #
-  back = ["MRZ.jpg","id.jpg","birthplace.jpg","expirydate.jpg","inssuingauthority.jpg","issuedate.jpg","nationality.jpg","pesel.jpg"]
-  #
-  passport = ["BirthDate.jpg","BirthPlace.jpg","Code.jpg","ExpairyDate.jpg","Face.jpg","ID.jpg","IssueAuthority.jpg","IssueDate.jpg","MRZ.jpg","Names.jpg","Nationality.jpg","Pesel.jpg","Pesel.jpg","Signature.jpg","Surname.jpg","Type.jpg"]
+#nazyw mask 
+front = ["face.jpg","surname.jpg","names.jpg","familyname.jpg","parentsname.jpg","birthdate.jpg","sex.jpg"]
+#
+back = ["MRZ.jpg","id.jpg","birthplace.jpg","expirydate.jpg","inssuingauthority.jpg","issuedate.jpg","nationality.jpg","pesel.jpg"]
+#
+passport = ["BirthDate.jpg","BirthPlace.jpg","Code.jpg","ExpairyDate.jpg","face.jpg","ID.jpg","IssueAuthority.jpg","IssueDate.jpg","MRZ.jpg","Names.jpg","Nationality.jpg","Pesel.jpg","Pesel.jpg","Signature.jpg","Surname.jpg","Type.jpg"]
 
-  # Wybor trybu 
-  current = []
-  if ( mode == "front" ) :
-    current = front
-  elif ( mode == "back") :
-    current = back
-  elif ( mode == "passport") :
-    current = passport
-  else :
-    raise Exception("Invalid arguments")
+# Wybor trybu 
+current = []
+if ( mode == "front" ) :
+  current = front
+elif ( mode == "back") :
+  current = back
+elif ( mode == "passport") :
+  current = passport
+else :
+  raise Exception("Invalid arguments")
 
-  print(mode)
-  # Wyznaczanie rozmiaru maski oraz zmiana rozmiaru dokumentu
-  maskShape = cv2.imread("src/documentDestructor/masks/"+mode+"/shape.jpg", cv2.IMREAD_GRAYSCALE)
-  msH = maskShape.shape[0]
-  msW = maskShape.shape[1]
+print(mode)
+# Wyznaczanie rozmiaru maski oraz zmiana rozmiaru dokumentu
+maskShape = cv2.imread("src/documentDestructor/masks/"+mode+"/shape.jpg", cv2.IMREAD_GRAYSCALE)
+msH = maskShape.shape[0]
+msW = maskShape.shape[1]
 
-  document = cv2.resize(document, (msW, msH), interpolation=cv2.INTER_AREA)
+document = cv2.resize(document, (msW, msH), interpolation=cv2.INTER_AREA)
 
-  cv2.imwrite(outputDir+fileName + "/"+ "document.jpg", document)
+cv2.imwrite(outputDir+fileName + "/"+ "document.jpg", document)
 
-  for mask in current:
-    print(mask)
+for mask in current:
+  print(mask)
+  if ( mask != "face.jpg" ) :
     maskImg = cv2.imread("src/documentDestructor/masks/"+mode+"/"+ mask, cv2.IMREAD_GRAYSCALE)
     _, curMask = cv2.threshold(maskImg, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
     masked = cv2.bitwise_and(document, document,mask=curMask)
     masked = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
-    if mask != "face.jpg":
-      masked = cv2.GaussianBlur(masked,(5,5),0)
-      masked = cv2.adaptiveThreshold(masked, 255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,19,14)
-      masked = cv2.dilate(masked, (3,3), iterations=3)
-      masked = cv2.erode(masked, (3,3), iterations=1)
-    #binaryzacja
+
+    masked = cv2.GaussianBlur(masked,(5,5),0)
+    masked = cv2.adaptiveThreshold(masked, 255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,19,14)
+    masked = cv2.dilate(masked, (3,3), iterations=3)
+    masked = cv2.erode(masked, (3,3), iterations=1)
 
     cv2.imwrite(outputDir+fileName + "/" + mask, masked)
-    print("DONE")
-  if ( mode == "front" ) :
-    cropFace(fileName)
+  print("DONE")
+if ( mode == "front" ) :
+  cropFace(fileName)
+if ( mode == "passport" ) :
+  cropFacePassport(fileName)

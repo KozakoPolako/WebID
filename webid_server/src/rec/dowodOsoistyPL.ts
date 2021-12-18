@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import Tesseract, { createWorker } from "tesseract.js";
 import { destructDocument } from "./documentDestructor";
 import { performance } from "perf_hooks"
-import DowodWorkers from "./dowodOsobistyWorkers";
+import DowodWorkers from "./tesseractWorkers";
 import path from "path";
 
 export type Dowod = {
@@ -27,7 +27,7 @@ enum Sex {
   Man,
   Woman,
 }
-const Workers = new DowodWorkers(); 
+const Workers = DowodWorkers; 
 class DowodOsobistyPL {
   id: string;
   surname: string;
