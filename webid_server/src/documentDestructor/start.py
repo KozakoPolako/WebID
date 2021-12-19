@@ -146,7 +146,7 @@ front = ["face.jpg","surname.jpg","names.jpg","familyname.jpg","parentsname.jpg"
 #
 back = ["MRZ.jpg","id.jpg","birthplace.jpg","expirydate.jpg","inssuingauthority.jpg","issuedate.jpg","nationality.jpg","pesel.jpg"]
 #
-passport = ["BirthDate.jpg","BirthPlace.jpg","Code.jpg","ExpairyDate.jpg","face.jpg","ID.jpg","IssueAuthority.jpg","IssueDate.jpg","MRZ.jpg","Names.jpg","Nationality.jpg","Pesel.jpg","Pesel.jpg","Signature.jpg","Surname.jpg","Type.jpg"]
+passport = ["BirthDate.jpg","BirthPlace.jpg","Code.jpg","ExpiryDate.jpg","face.jpg","ID.jpg","IssueAuthority.jpg","IssueDate.jpg","MRZ.jpg","Names.jpg","Nationality.jpg","Pesel.jpg","Sex.jpg","Signature.jpg","Surname.jpg","Type.jpg"]
 
 # Wybor trybu 
 current = []
