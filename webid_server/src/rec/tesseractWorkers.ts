@@ -43,6 +43,7 @@ class TesseractWorkers {
 
   }
   prepareDatePassport(date: string): string {
+    console.log("data wejściowa :", date)
     let matchArray = date.match(this.passportDataRegex)
     let output = matchArray ? matchArray [0]: ""
     return output

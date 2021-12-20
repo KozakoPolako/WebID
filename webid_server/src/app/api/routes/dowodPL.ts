@@ -108,7 +108,7 @@ router.post(
         const backfilename = req.files[1].filename.split(".")[0];
         const mongo = new mongoController();
 
-        const record = await mongo.insertDocument(
+        const record = await mongo.insertDowod(
           temp,
           frontfilename,
           backfilename

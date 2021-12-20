@@ -48,14 +48,26 @@ const upload = multer({
   },
 });
 
+// Wysłanie paszportu do rozpoznania
 router.post("/", upload.single("paszportImage"), async (req,res,next) =>{
   if (req.file) {
     try {
       const temp = await PaszportPL.getDocumentFromPhoto (req.file.path)
-      console.log("Skończyłem",req.file);
+      console.log("Skończyłem");
       console.dir(temp);
+
+      const passportFileName = req.file.filename.split(".")[0];
+
+      const mongo = new mongoController();
+      const record = await mongo.insertPassport(temp, passportFileName);
+
+      const recordID = record?.insertedId.toString();
+
       res.status(200).json({
-        message: "Udało się HURAAAA"
+        paszport: temp,
+        id: recordID,
+        faceURL: `${adress}/dokuments/pl/paszport/zdjecie/face/${recordID}`,
+        photoURL: `${adress}/dokuments/pl/paszport/zdjecie/photo/${recordID}`,
       })
     } catch(e) {
       console.log(e);
@@ -65,5 +77,30 @@ router.post("/", upload.single("paszportImage"), async (req,res,next) =>{
     }
   }
 })
+// pobranie zdjęcia paszportu
+// TODO
+router.get("/zdjecie/:photo/:docID", async (req, res, next) => {
+  const mongo = new mongoController();
+  const document = await mongo.getPassport(req.params.docID);
+  if (document) {
+    switch (req.params.photo) {
+      case "face":
+        mongo.sendDowodPhotoByID(document.faceID, res);
+        break;
+      case "photo":
+        mongo.sendDowodPhotoByID(document.photoID, res);
+        break;
+      default:
+        res.status(400).json({
+          message: "Nieprawidłowy Parametr",
+        });
+        break;
+    }
+  } else {
+    res.status(404).json({
+      message: "Nie znaleziono dokumentu",
+    });
+  }
+});
 
 export default router;
