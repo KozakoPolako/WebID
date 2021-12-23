@@ -1,6 +1,41 @@
 version: "3"
 
 services:
+
+  webid-auth-db:
+    container_name: webid-auth-db
+    image: mysql:latest
+    networks:
+      - auth
+    environment:
+      - MYSQL_ROOT_PASSWORD=${WEBID_MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${WEBID_MYSQL_DB_NAME}
+      - MYSQL_USER=${WEBID_MYSQL_USERNAME}
+      - MYSQL_PASSWORD=${WEBID_MYSQL_PASSWORD}
+    ports:
+      - 3306:3306
+  webid-auth:
+    container_name: webid-auth
+    image: jboss/keycloak:latest
+    networks:
+      - frontend
+      - auth
+    environment:
+        - DB_VENDOR=mysql
+        - DB_ADDR=webid-auth-db
+        - DB_PORT=3306
+        - DB_DATABASE=${WEBID_MYSQL_DB_NAME}
+        - DB_USER=${WEBID_MYSQL_USERNAME}
+        - DB_PASSWORD=${WEBID_MYSQL_PASSWORD}
+        - KEYCLOAK_USER=${WEBID_KEYCLOAK_USERNAME}
+        - KEYCLOAK_PASSWORD=${WEBID_KEYCLOAK_PASSWORD}
+    ports:
+      - 8070:8080
+      - 8443:8443
+      - 9990:9990
+    depends_on:
+      - webid_auth_db
+
   webid-db:
     container_name: webid-db
     networks:
@@ -35,6 +70,7 @@ services:
       - 3000:3000
     depends_on:
       - webid-db
+      - webid_auth
   webid-client:
     container_name: webid-client
     networks:
@@ -49,6 +85,8 @@ services:
     #command: /bin/sh -c "yarn serve"
     depends_on:
       - webid-server
+      - webid_auth
 networks:
   frontend:
   backend:
+  auth:
