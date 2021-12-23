@@ -6,6 +6,7 @@ node_modules
 dist
 temporary
 webid_db/db
+.env
 
 # local env files
 .env.local
