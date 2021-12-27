@@ -8,10 +8,12 @@ import {
   GridFSBucket,
   GridFSBucketReadStream,
   GridFSBucketWriteStream,
+  InsertOneResult,
   MongoClient,
   Timestamp,
 } from "mongodb";
 import { resolve } from "path/posix";
+import { User } from "../auth/User";
 import { Dowod } from "../rec/dowodOsoistyPL";
 import { Paszport } from "../rec/paszportPL";
 
@@ -26,6 +28,12 @@ interface documentData {
   documentData: Dowod | Paszport;
   creationDate: Date;
 }
+
+type MongoUser = {
+  keykloakID: string;
+  dowods: ObjectID[];
+  paszports: ObjectID[];
+};
 
 export type DowodPLDocument = {
   _id?: ObjectID;
@@ -63,8 +71,8 @@ class Mongo {
   dowodsCol: Collection<DowodPLDocument> | undefined;
   passportsCol: Collection<PaszportPLDocument> | undefined;
   settingsCol: Collection<ValidateSettings> | undefined;
+  usersCol: Collection<MongoUser> | undefined;
 
-  usersCol: Collection<Document> | undefined;
   photosBucket: GridFSBucket | undefined;
 
   constructor() {
@@ -85,11 +93,20 @@ class Mongo {
   ////////////////////////////////////////////////////////////////////////////////////////
   //  Dowod
   ////////////////////////////////////////////////////////////////////////////////////////
-  async insertDowod(doc: Dowod, frontName: string, backName: string) {
+  async insertDowod(
+    ownerID: string,
+    doc: Dowod,
+    frontName: string,
+    backName: string
+  ): Promise<InsertOneResult<DowodPLDocument> | null> {
     try {
+      if (!ownerID) {
+        return null;
+      }
       await this.client.connect();
       this.database = this.client.db("WebID");
       this.dowodsCol = this.database.collection("dokumenty");
+      this.usersCol = this.database.collection("uzytkownicy");
       this.photosBucket = new GridFSBucket(this.database, {
         bucketName: "DowodPhotos",
       });
@@ -126,7 +143,23 @@ class Mongo {
           },
         ],
       };
-      return await this.dowodsCol.insertOne(dowod);
+
+      const results = await this.dowodsCol.insertOne(dowod);
+
+      const filter = {
+        keykloakID: ownerID,
+      };
+      const update = {
+        $addToSet: {
+          dowods: results.insertedId,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
+      await this.usersCol.updateOne(filter, update, options);
+
+      return results;
     } catch (error) {
       console.log(`Insert Error: ${error}`);
       return null;
@@ -222,23 +255,38 @@ class Mongo {
       await this.client.close();
     }
   }
-  async getDowods(): Promise<Array<DowodPLDocument> | undefined> {
+  async getDowods(user: User): Promise<Array<DowodPLDocument> | undefined> {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
       this.dowodsCol = this.database.collection("dokumenty");
+      this.usersCol = this.database.collection("uzytkownicy");
+      if(user.isAdmin) {
+        const documents = await this.dowodsCol.find({ saved: true }).toArray();
+        return documents;
+      } else {
+        const userfilter = {
+          keykloakID: user.ID
+        }
+        const userInfo = await this.usersCol.findOne(userfilter);
+        if (!userInfo) return []
 
-      const filter = {
-        saved: true,
-      };
+        const filter = {
+          _id: {
+            $in: userInfo.dowods
+          },
+          saved: true,
+        };
+        const documents = await this.dowodsCol.find(filter).toArray();
+        return documents;
+      }
+      
+
       // const options = {
       //   projection: {
       //     _id: 1,
       //   },
       // }
-
-      const documents = await this.dowodsCol.find(filter).toArray();
-      return documents;
     } catch (error) {
     } finally {
       await this.client.close();
@@ -287,11 +335,15 @@ class Mongo {
   //  Paszport
   ////////////////////////////////////////////////////////////////////////////////////////
 
-  async insertPassport(doc: Paszport, photoName: string) {
+  async insertPassport(ownerID: string, doc: Paszport, photoName: string) {
     try {
+      if (!ownerID) {
+        return null;
+      }
       await this.client.connect();
       this.database = this.client.db("WebID");
       this.passportsCol = this.database.collection("paszporty");
+      this.usersCol = this.database.collection("uzytkownicy");
       this.photosBucket = new GridFSBucket(this.database, {
         bucketName: "DowodPhotos",
       });
@@ -316,8 +368,21 @@ class Mongo {
           },
         ],
       };
+      const results = await this.passportsCol.insertOne(passport);
+      const filter = {
+        keykloakID: ownerID,
+      };
+      const update = {
+        $addToSet: {
+          paszports: results.insertedId,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
+      await this.usersCol.updateOne(filter, update, options);
 
-      return await this.passportsCol.insertOne(passport);
+      return results;
     } catch (error) {
       console.log(`Insert Error: ${error}`);
     } finally {
@@ -340,6 +405,49 @@ class Mongo {
       console.log(`Find Error: ${error}`);
     } finally {
       await this.client.close();
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //  Autoryzacja
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  async isDowodOwner(userID: string, id: string): Promise<boolean> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.usersCol = this.database.collection("uzytkownicy");
+      const filter = {
+        keykloakID: userID,
+        dowods: new ObjectID(id)
+      }
+      const results = await this.usersCol.findOne(filter)
+      //console.log("rezultaty:::\n",results)
+      return  !(results == null)
+    } catch (error) {
+      return false
+    } finally {
+      await this.client.close();
+      //return false;
+    }
+  }
+  async isPassportOwner(userID: string, id: string): Promise<boolean> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.usersCol = this.database.collection("uzytkownicy");
+      const filter = {
+        keykloakID: userID,
+        paszports: new ObjectID(id)
+      }
+      const results = await this.usersCol.findOne(filter)
+      //console.log("rezultaty:::\n",results)
+      return  !(results == null)
+    } catch (error) {
+      return false
+    } finally {
+      await this.client.close();
+      //return false;
     }
   }
 

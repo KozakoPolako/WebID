@@ -7,8 +7,16 @@ import fs from "fs";
 import { Dowod } from "../../../rec/dowodOsoistyPL";
 import { mongoController } from "../../app";
 import FormValidation from "../../../validation/form-validation";
+import Keycloak from "../../../auth/keycloak-config";
+import { User } from "../../../auth/User";
 
 const router = express.Router();
+
+const keycloak = Keycloak.getKeycloak();
+
+if (!keycloak) {
+  throw new Error("Keycloak init error");
+}
 
 const adress = "http://localhost:3000/api";
 
@@ -54,164 +62,248 @@ const upload = multer({
 //   });
 // });
 //pobierz zdjęcie z dowodu
-router.get("/zdjecie/:photo/:docID", async (req, res, next) => {
-  const mongo = new mongoController();
-  const document = await mongo.getDowod(req.params.docID);
-  if (document) {
-    switch (req.params.photo) {
-      case "face":
-        mongo.sendDowodPhotoByID(document.faceID, res);
-        break;
-      case "front":
-        mongo.sendDowodPhotoByID(document.frontID, res);
-        break;
-      case "back":
-        mongo.sendDowodPhotoByID(document.backID, res);
-        break;
-      default:
-        res.status(400).json({
-          message: "Nieprawidłowy Parametr",
-        });
-        break;
+router.get(
+  "/zdjecie/:photo/:docID",
+  keycloak.protect("user"),
+  async (req, res, next) => {
+    let authorized = true;
+    if (req.token) {
+      const user = new User(req.token);
+      if (!((await user.isDowodOwner(req.params.docID)) || user.isAdmin)) {
+        authorized = false;
+      }
+    } else {
+      authorized = false;
     }
-  } else {
-    res.status(404).json({
-      message: "Nie znaleziono dokumentu",
-    });
+    if (authorized) {
+      const mongo = new mongoController();
+      const document = await mongo.getDowod(req.params.docID);
+      if (document) {
+        switch (req.params.photo) {
+          case "face":
+            mongo.sendDowodPhotoByID(document.faceID, res);
+            break;
+          case "front":
+            mongo.sendDowodPhotoByID(document.frontID, res);
+            break;
+          case "back":
+            mongo.sendDowodPhotoByID(document.backID, res);
+            break;
+          default:
+            res.status(400).json({
+              message: "Nieprawidłowy Parametr",
+            });
+            break;
+        }
+      } else {
+        res.status(404).json({
+          message: "Nie znaleziono dokumentu",
+        });
+      }
+    } else {
+      res.status(401).json({
+        message: "Brak uprawnień",
+      });
+    }
   }
-});
+);
 
 // wysałanie dowodu do rozpoznania
 router.post(
   "/",
   upload.array("dowodImage", 2),
+  keycloak.protect("user"),
   async (req, res, next) => {
     //console.log(req.files);
 
-    if (req.files && req.files.length == 2) {
-      try {
-        var files = [];
-        var fileKeys = Object.keys(req.files);
-        //const file = fs.readFileSync("D:\\OneDrive - Wojskowa Akademia Techniczna\\Obrazy\\Praca Inżynierska zdj\\Dowod-Osobisty-2015.jpg");
-        // @ts-ignore
-        const temp = await DowodOsobistyPL.getDocumentFromPhoto(
+    if (!req.token) {
+      res.status(401).json({
+        message: "Brak uprawnień",
+      });
+    } else {
+      const user = new User(req.token);
+      if (req.files && req.files.length == 2) {
+        try {
+          var files = [];
+          var fileKeys = Object.keys(req.files);
+          //const file = fs.readFileSync("D:\\OneDrive - Wojskowa Akademia Techniczna\\Obrazy\\Praca Inżynierska zdj\\Dowod-Osobisty-2015.jpg");
           // @ts-ignore
-          req.files[0].path,
+          const temp = await DowodOsobistyPL.getDocumentFromPhoto(
+            // @ts-ignore
+            req.files[0].path,
+            // @ts-ignore
+            req.files[1].path
+          );
+          console.log("Skończyłem");
+          console.dir(temp);
           // @ts-ignore
-          req.files[1].path
-        );
-        console.log("Skończyłem");
-        console.dir(temp);
-        // @ts-ignore
-        const frontfilename = req.files[0].filename.split(".")[0];
-        // @ts-ignore
-        const backfilename = req.files[1].filename.split(".")[0];
-        const mongo = new mongoController();
+          const frontfilename = req.files[0].filename.split(".")[0];
+          // @ts-ignore
+          const backfilename = req.files[1].filename.split(".")[0];
+          const mongo = new mongoController();
 
-        const record = await mongo.insertDowod(
-          temp,
-          frontfilename,
-          backfilename
-        );
-        const recordID = record?.insertedId.toString();
-        res.status(200).json({
-          dowod: temp,
-          id: recordID,
-          faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
-          frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
-          backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
-        });
-      } catch (e) {
-        console.log(e);
-        res.status(404).json({
-          message: "Nie udało się odczytać danych ze zdjęcia",
-        });
+          const record = await mongo.insertDowod(
+            user.ID,
+            temp,
+            frontfilename,
+            backfilename
+          );
+          const recordID = record?.insertedId.toString();
+          res.status(200).json({
+            dowod: temp,
+            id: recordID,
+            faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
+            frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
+            backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
+          });
+        } catch (e) {
+          console.log(e);
+          res.status(404).json({
+            message: "Nie udało się odczytać danych ze zdjęcia",
+          });
+        }
       }
     }
   }
 );
 // aktualizuj dokument
-router.put("/:docID", jsonParser, async (req, res, next) => {
-  const dowod: Dowod = req.body;
-  const validation = await FormValidation.validateDowod(dowod);
+router.put(
+  "/:docID",
+  jsonParser,
+  keycloak.protect(),
+  async (req, res, next) => {
+    let authorized = true;
+    if (req.token) {
+      const user = new User(req.token);
+      if (!((await user.isDowodOwner(req.params.docID)) || user.isAdmin)) {
+        authorized = false;
+      }
+    } else {
+      authorized = false;
+    }
+    if (authorized) {
+      const dowod: Dowod = req.body;
+      const validation = await FormValidation.validateDowod(dowod);
 
-  if (typeof validation === "boolean") {
-    try {
-      const mongo = new mongoController();
+      if (typeof validation === "boolean") {
+        try {
+          const mongo = new mongoController();
 
-      await mongo.updateDocument(dowod, req.params.docID);
+          await mongo.updateDocument(dowod, req.params.docID);
 
-      res.status(200).json({
-        message: "Udało się zapisać dokument",
-      });
-    } catch (e) {
-      console.log(e);
-      res.status(400).json({
-        message: "Nie udało się zapisać dokumentu",
+          res.status(200).json({
+            message: "Udało się zapisać dokument",
+          });
+        } catch (e) {
+          console.log(e);
+          res.status(400).json({
+            message: "Nie udało się zapisać dokumentu",
+          });
+        }
+      } else {
+        res.status(406).json({
+          message: "Nieprawidłowo wypełniony formularz:",
+          errors: validation,
+        });
+      }
+    } else {
+      res.status(401).json({
+        message: "Brak uprawnień",
       });
     }
-  } else {
-    res.status(406).json({
-      message: "Nieprawidłowo wypełniony formularz:",
-      errors: validation,
-    });
   }
-});
+);
 // pobierz liste dokumentów
-router.get("/", async (req, res, next) => {
-  const mongo = new mongoController();
-  const documents = await mongo.getDowods();
-  if (documents) {
-    const payload = documents.map((v) => {
-      const id = v._id?.toString();
-      return {
-        id: id,
-        frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${id}`,
-      };
-    });
-    res.status(200).json({
-      _embeded: payload,
+router.get("/", keycloak.protect(), async (req, res, next) => {
+  if (!req.token) {
+    res.status(401).json({
+      message: "Brak uprawnień",
     });
   } else {
-    res.status(404).json({
-      message: "Nie znaleziono dokumentu",
-    });
+    const mongo = new mongoController();
+    const documents = await mongo.getDowods(new User(req.token));
+    if (documents) {
+      const payload = documents.map((v) => {
+        const id = v._id?.toString();
+        return {
+          id: id,
+          frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${id}`,
+        };
+      });
+      res.status(200).json({
+        _embeded: payload,
+      });
+    } else {
+      res.status(404).json({
+        message: "Nie znaleziono dokumentu",
+      });
+    }
   }
 });
 
 // pobierz dokument
-router.get("/:docID", async (req, res, next) => {
-  const mongo = new mongoController();
-  const recordID = req.params.docID;
-  const document = await mongo.getDowod(recordID);
-  if (document) {
-    const dowodData = document.dataHistory[document.dataHistory.length - 1];
-    res.status(200).json({
-      dowod: dowodData.documentData,
-      id: recordID,
-      faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
-      frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
-      backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
-    });
+router.get("/:docID", keycloak.protect(), async (req, res, next) => {
+  let authorized = true;
+  if (req.token) {
+    const user = new User(req.token);
+    if (!((await user.isDowodOwner(req.params.docID)) || user.isAdmin)) {
+      authorized = false;
+    }
   } else {
-    res.status(404).json({
-      message: "Nie znaleziono dokumentu",
+    authorized = false;
+  }
+  if (authorized) {
+    const mongo = new mongoController();
+    const recordID = req.params.docID;
+    const document = await mongo.getDowod(recordID);
+    if (document) {
+      const dowodData = document.dataHistory[document.dataHistory.length - 1];
+      res.status(200).json({
+        dowod: dowodData.documentData,
+        id: recordID,
+        faceURL: `${adress}/dokuments/pl/dowod/zdjecie/face/${recordID}`,
+        frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
+        backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
+      });
+    } else {
+      res.status(404).json({
+        message: "Nie znaleziono dokumentu",
+      });
+    }
+  } else {
+    res.status(401).json({
+      message: "Brak uprawnień",
     });
   }
 });
 
 // usuń dokument
-router.delete("/:docID", async (req, res, next) => {
-  const mongo = new mongoController();
-  const recordID = req.params.docID;
-  try {
-    await mongo.deleteDowod(recordID);
-    res.status(200).json({
-      message: "Udało się usunąć dokument",
-    });
-  } catch (error) {
-    res.status(400).json({
-      message: error,
+router.delete("/:docID", keycloak.protect(), async (req, res, next) => {
+  let authorized = true;
+  if (req.token) {
+    const user = new User(req.token);
+    if (!((await user.isDowodOwner(req.params.docID)) || user.isAdmin)) {
+      authorized = false;
+    }
+  } else {
+    authorized = false;
+  }
+  if (authorized) {
+    const mongo = new mongoController();
+    const recordID = req.params.docID;
+    try {
+      await mongo.deleteDowod(recordID);
+      res.status(200).json({
+        message: "Udało się usunąć dokument",
+      });
+    } catch (error) {
+      res.status(400).json({
+        message: error,
+      });
+    }
+  } else {
+    res.status(401).json({
+      message: "Brak uprawnień",
     });
   }
 });

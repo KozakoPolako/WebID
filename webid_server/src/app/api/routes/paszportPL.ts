@@ -3,12 +3,20 @@ import bodyParser from "body-parser";
 import multer from "multer";
 import PaszportPL from "../../../rec/paszportPL";
 import mkdirp from "mkdirp";
+import Keycloak from "../../../auth/keycloak-config";
 import fs from "fs";
 import { Dowod } from "../../../rec/dowodOsoistyPL";
 import { mongoController } from "../../app";
 import FormValidation from "../../../validation/form-validation";
+import { User } from "../../../auth/User";
 
 const router = express.Router();
+
+const keycloak = Keycloak.getKeycloak();
+
+if (!keycloak) {
+  throw new Error("Keycloak init error");
+}
 
 const adress = "http://localhost:3000/api";
 
@@ -49,58 +57,93 @@ const upload = multer({
 });
 
 // Wysłanie paszportu do rozpoznania
-router.post("/", upload.single("paszportImage"), async (req,res,next) =>{
-  if (req.file) {
-    try {
-      const temp = await PaszportPL.getDocumentFromPhoto (req.file.path)
-      console.log("Skończyłem");
-      console.dir(temp);
+router.post(
+  "/",
+  upload.single("paszportImage"),
+  keycloak.protect("user"),
+  async (req, res, next) => {
+    if (!req.token) {
+      res.status(401).json({
+        message: "Brak uprawnień",
+      });
+    } else {
+      const user = new User(req.token);
+      if (req.file) {
+        try {
+          const temp = await PaszportPL.getDocumentFromPhoto(req.file.path);
+          console.log("Skończyłem");
+          console.dir(temp);
 
-      const passportFileName = req.file.filename.split(".")[0];
+          const passportFileName = req.file.filename.split(".")[0];
 
+          const mongo = new mongoController();
+          const record = await mongo.insertPassport(
+            user.ID,
+            temp,
+            passportFileName
+          );
+
+          const recordID = record?.insertedId.toString();
+
+          res.status(200).json({
+            paszport: temp,
+            id: recordID,
+            faceURL: `${adress}/dokuments/pl/paszport/zdjecie/face/${recordID}`,
+            photoURL: `${adress}/dokuments/pl/paszport/zdjecie/photo/${recordID}`,
+          });
+        } catch (e) {
+          console.log(e);
+          res.status(404).json({
+            message: "Nie udało się odczytać danych ze zdjęcia",
+          });
+        }
+      }
+    }
+  }
+);
+// pobranie zdjęcia paszportu
+// TODO
+router.get(
+  "/zdjecie/:photo/:docID",
+  keycloak.protect(),
+  async (req, res, next) => {
+    let authorized = true;
+    if (req.token) {
+      const user = new User(req.token);
+      if (!((await user.isDowodOwner(req.params.docID)) || user.isAdmin)) {
+        authorized = false;
+      }
+    } else {
+      authorized = false;
+    }
+    if (authorized) {
       const mongo = new mongoController();
-      const record = await mongo.insertPassport(temp, passportFileName);
-
-      const recordID = record?.insertedId.toString();
-
-      res.status(200).json({
-        paszport: temp,
-        id: recordID,
-        faceURL: `${adress}/dokuments/pl/paszport/zdjecie/face/${recordID}`,
-        photoURL: `${adress}/dokuments/pl/paszport/zdjecie/photo/${recordID}`,
-      })
-    } catch(e) {
-      console.log(e);
-      res.status(404).json({
-        message: "Nie udało się odczytać danych ze zdjęcia",
+      const document = await mongo.getPassport(req.params.docID);
+      if (document) {
+        switch (req.params.photo) {
+          case "face":
+            mongo.sendDowodPhotoByID(document.faceID, res);
+            break;
+          case "photo":
+            mongo.sendDowodPhotoByID(document.photoID, res);
+            break;
+          default:
+            res.status(400).json({
+              message: "Nieprawidłowy Parametr",
+            });
+            break;
+        }
+      } else {
+        res.status(404).json({
+          message: "Nie znaleziono dokumentu",
+        });
+      }
+    } else {
+      res.status(401).json({
+        message: "Brak uprawnień",
       });
     }
   }
-})
-// pobranie zdjęcia paszportu
-// TODO
-router.get("/zdjecie/:photo/:docID", async (req, res, next) => {
-  const mongo = new mongoController();
-  const document = await mongo.getPassport(req.params.docID);
-  if (document) {
-    switch (req.params.photo) {
-      case "face":
-        mongo.sendDowodPhotoByID(document.faceID, res);
-        break;
-      case "photo":
-        mongo.sendDowodPhotoByID(document.photoID, res);
-        break;
-      default:
-        res.status(400).json({
-          message: "Nieprawidłowy Parametr",
-        });
-        break;
-    }
-  } else {
-    res.status(404).json({
-      message: "Nie znaleziono dokumentu",
-    });
-  }
-});
+);
 
 export default router;
