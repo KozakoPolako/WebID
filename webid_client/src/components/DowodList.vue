@@ -8,7 +8,7 @@
             class="white rounded-lg pa-2 ml-2 dowod-img"
             @click="redirectToDowod(dowod.id)"
           >
-            <v-img :src="dowod.frontURL" class="rounded-lg"></v-img>
+            <auth-img :auth-src="dowod.frontURL" class="rounded-lg"></auth-img>
           </v-card-text>
         </v-card>
       </v-col>
@@ -18,8 +18,10 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import AuthImg from "./AuthImg"
 export default {
   name: "DowodList",
+  components: { AuthImg },
   data() {
     return {
       items: [],
@@ -51,6 +53,10 @@ export default {
     redirectToDowod(docID) {
       this.$router.push({ name: "documentView", params: { docID: docID } });
     },
+    downloadImage(url, e) {
+      console.log(url)
+      console.log(e)
+    }
   },
 };
 </script>
