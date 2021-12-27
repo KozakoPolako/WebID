@@ -98,3 +98,17 @@ const toastOptions = {
 Vue.use(toast, toastOptions);
 
 Vue.use(VueMask);
+
+axios.interceptors.response.use(
+  response => {
+      return Promise.resolve(response)
+  },
+  error => {
+      const { status } = error.response
+      if (status === 403 || status === 401) {
+          router.push({name: "unauthorized"})
+      }
+      return Promise.reject(error)
+  },
+)
+

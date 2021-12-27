@@ -55,6 +55,15 @@ const routes = [
 
     component: () => import("../views/SettingsView.vue"),
   },
+  {
+    path: "/brak-dostepu",
+    name: "unauthorized",
+    meta: {
+      title: "Brak dostępu",
+    },
+
+    component: () => import("../views/Unauthorized.vue"),
+  },
 
 ];
 
