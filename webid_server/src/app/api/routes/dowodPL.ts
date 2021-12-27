@@ -214,7 +214,7 @@ router.put(
   }
 );
 // pobierz liste dokumentów
-router.get("/",keycloak.protect(), async (req, res, next) => {
+router.get("/", keycloak.protect(), async (req, res, next) => {
   if (!req.token) {
     res.status(401).json({
       message: "Brak uprawnień",

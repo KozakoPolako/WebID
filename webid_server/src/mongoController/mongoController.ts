@@ -335,11 +335,15 @@ class Mongo {
   //  Paszport
   ////////////////////////////////////////////////////////////////////////////////////////
 
-  async insertPassport(doc: Paszport, photoName: string) {
+  async insertPassport(ownerID: string, doc: Paszport, photoName: string) {
     try {
+      if (!ownerID) {
+        return null;
+      }
       await this.client.connect();
       this.database = this.client.db("WebID");
       this.passportsCol = this.database.collection("paszporty");
+      this.usersCol = this.database.collection("uzytkownicy");
       this.photosBucket = new GridFSBucket(this.database, {
         bucketName: "DowodPhotos",
       });
@@ -364,8 +368,21 @@ class Mongo {
           },
         ],
       };
+      const results = await this.passportsCol.insertOne(passport);
+      const filter = {
+        keykloakID: ownerID,
+      };
+      const update = {
+        $addToSet: {
+          paszports: results.insertedId,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
+      await this.usersCol.updateOne(filter, update, options);
 
-      return await this.passportsCol.insertOne(passport);
+      return results;
     } catch (error) {
       console.log(`Insert Error: ${error}`);
     } finally {
@@ -403,6 +420,25 @@ class Mongo {
       const filter = {
         keykloakID: userID,
         dowods: new ObjectID(id)
+      }
+      const results = await this.usersCol.findOne(filter)
+      //console.log("rezultaty:::\n",results)
+      return  !(results == null)
+    } catch (error) {
+      return false
+    } finally {
+      await this.client.close();
+      //return false;
+    }
+  }
+  async isPassportOwner(userID: string, id: string): Promise<boolean> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.usersCol = this.database.collection("uzytkownicy");
+      const filter = {
+        keykloakID: userID,
+        paszports: new ObjectID(id)
       }
       const results = await this.usersCol.findOne(filter)
       //console.log("rezultaty:::\n",results)
