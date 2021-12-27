@@ -21,24 +21,35 @@
             </v-btn>
           </template>
           <v-card>
-            <v-card-title primary-title> Akcje: </v-card-title>
+            <v-card-title primary-title>{{this.$keycloak.tokenParsed['preferred_username']}}</v-card-title>
             <v-divider></v-divider>
             <v-card-text justify-center>
-              <v-col cols="6" justify="center"
+              <v-col cols="6" justify="center" class="pa-0"
                 ><v-btn plain @click="$router.push({ name: 'addDocument' })">
                   Dodaj Dokument
                 </v-btn></v-col
               >
-              <v-col cols="6"
+              <v-col cols="6" class="pa-0"
                 ><v-btn plain @click="$router.push({ name: 'documentsView' })">
                   Moje Dokumenty
                 </v-btn></v-col
               >
-              <v-col cols="12"
+              <v-col cols="12" class="px-0 pt-0"
                 ><v-btn plain @click="$router.push({ name: 'settingsView' })">
                   Ustawienia
                 </v-btn></v-col
               >
+              <v-col cols="12" class="px-0 pt-0 pb-3"
+                ><v-btn width="100%" color="green lighten-2" class="white--text" @click="accSettings">
+                  Zarządzaj kontem
+                </v-btn></v-col
+              >
+              <v-col cols="12" class="pa-0"
+                ><v-btn width="100%" color="green lighten-2" outlined @click="this.$keycloak.logout">
+                  Wyloguj
+                </v-btn></v-col
+              >
+
             </v-card-text>
           </v-card>
         </v-menu>
@@ -48,7 +59,13 @@
 </template>
 
 <script>
-export default {};
+export default {
+  methods: {
+    accSettings() {
+      window.location.href = `http://localhost:8070/auth/realms/WebID/account?referrer=${this.$keycloak.clientId}&referrer_uri=${window.location.href}`
+    }
+  }
+};
 </script>
 
 <style></style>

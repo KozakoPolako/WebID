@@ -18,5 +18,8 @@ export default {
   data: () => ({
     //
   }),
+  // mounted() {
+  //   console.log("kl:", this.$keycloak);
+  // },
 };
 </script>
