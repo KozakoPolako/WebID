@@ -12,6 +12,7 @@ const keycloakConfig = {
 };
 
  class KeycloacConfig {
+  memoryStore = new session.MemoryStore();
   _keycloak: Keycloak.Keycloak | undefined;
 
   constructor() {
@@ -22,9 +23,9 @@ const keycloakConfig = {
       console.warn("Trying to init Keycloak again!");
     } else {
       console.log("Initializing Keycloak...");
-      var memoryStore = new session.MemoryStore();
+      //const memoryStore = new session.MemoryStore();
       //@ts-ignore
-      this._keycloak = new Keycloak({ store: memoryStore }, keycloakConfig);
+      this._keycloak = new Keycloak({ store: this.memoryStore }, keycloakConfig);
     }
   }
   getKeycloak(): Keycloak.Keycloak | undefined {

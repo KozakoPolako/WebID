@@ -1,7 +1,10 @@
 import express, { Router, Request, Response } from "express";
 import bodyParser from "body-parser";
 import mongoController, { DowodPLValidateRules } from "../../../mongoController/mongoController";
-import Keycloak from "../../../config/keycloak-config";
+import Keycloak from "../../../auth/keycloak-config";
+
+
+const router = express.Router();
 
 const keycloak = Keycloak.getKeycloak()
 
@@ -9,11 +12,11 @@ if (!keycloak) {
   throw new Error("Keycloak init error")
 }
 
-const router = express.Router();
+
 const jsonParser = bodyParser.json();
 
 // pobierz kryteria walidacji
-router.get("/walidacja/dowod",keycloak.protect('admin'), async (req, res, next) => {
+router.get("/walidacja/dowod",keycloak.protect(), async (req, res, next) => {
   const mongo = new mongoController();
 
   const rules = await mongo.getDowodValidateRules()
@@ -30,7 +33,7 @@ router.get("/walidacja/dowod",keycloak.protect('admin'), async (req, res, next) 
 });
 
 // aktualizuj kryteria walidacji
-router.put("/walidacja/dowod", jsonParser, async (req, res, next) => {
+router.put("/walidacja/dowod",keycloak.protect('admin') , jsonParser, async (req, res, next) => {
   try {
     const mongo = new mongoController();
     const newRules: DowodPLValidateRules = req.body;
