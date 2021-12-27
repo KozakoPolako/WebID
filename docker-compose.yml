@@ -29,6 +29,9 @@ services:
         - DB_PASSWORD=${WEBID_MYSQL_PASSWORD}
         - KEYCLOAK_USER=${WEBID_KEYCLOAK_USERNAME}
         - KEYCLOAK_PASSWORD=${WEBID_KEYCLOAK_PASSWORD}
+    volumes:
+      - ./webid_auth/custom-login:/opt/jboss/keycloak/themes/webid-login
+      - ./webid_auth/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml 
     ports:
       - 8070:8080
       - 8443:8443
