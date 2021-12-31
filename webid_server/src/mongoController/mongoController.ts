@@ -407,6 +407,34 @@ class Mongo {
       await this.client.close();
     }
   }
+  async updatePassport(doc: Paszport, id: string): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+      const filter = {
+        _id: new ObjectID(id),
+      };
+      const update = {
+        $addToSet: {
+          dataHistory: {
+            creationDate: new Date(),
+            documentData: doc,
+          },
+        },
+        $set: { saved: true },
+      };
+      const result = await this.passportsCol.updateOne(filter, update);
+      console.log(
+        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+      );
+    } catch (error) {
+      console.log("ERROR: ", error);
+      throw new Error("Nie udało się zapisać dowodu");
+    } finally {
+      await this.client.close()
+    }
+  }
 
   ////////////////////////////////////////////////////////////////////////////////////////
   //  Autoryzacja

@@ -1,7 +1,7 @@
 import express, { Router, Request, Response } from "express";
 import bodyParser from "body-parser";
 import multer from "multer";
-import PaszportPL from "../../../rec/paszportPL";
+import PaszportPL, { Paszport } from "../../../rec/paszportPL";
 import mkdirp from "mkdirp";
 import Keycloak from "../../../auth/keycloak-config";
 import fs from "fs";
@@ -102,7 +102,6 @@ router.post(
   }
 );
 // pobranie zdjęcia paszportu
-// TODO
 router.get(
   "/zdjecie/:photo/:docID",
   keycloak.protect(),
@@ -110,7 +109,7 @@ router.get(
     let authorized = true;
     if (req.token) {
       const user = new User(req.token);
-      if (!((await user.isDowodOwner(req.params.docID)) || user.isAdmin)) {
+      if (!((await user.isPassportOwner(req.params.docID)) || user.isAdmin)) {
         authorized = false;
       }
     } else {
@@ -145,5 +144,40 @@ router.get(
     }
   }
 );
+router.put("/:docID",keycloak.protect(), jsonParser, async(req,res,next) => {
+  let authorized = true;
+  if (req.token) {
+    const user = new User(req.token);
+    if (!((await user.isPassportOwner(req.params.docID)) || user.isAdmin)) {
+      authorized = false;
+    }
+  } else {
+    authorized = false;
+  }
+  if (authorized) {
+    const passport: Paszport = req.body;
+    const validation = await FormValidation.validatePassport(passport);
+    if (typeof validation === "boolean") {
+      try {
+        const mongo = new mongoController();
+        await mongo.updatePassport(passport, req.params.docID);
+      } catch (e) {
+        console.log(e);
+        res.status(400).json({
+          message: "Nie udało się zapisać dokumentu",
+        });
+      }
+    }else {
+      res.status(406).json({
+        message: "Nieprawidłowo wypełniony formularz:",
+        errors: validation,
+      });
+    }
+  } else {
+    res.status(401).json({
+      message: "Brak uprawnień",
+    });
+  }
+})
 
 export default router;

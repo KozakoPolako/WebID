@@ -31,6 +31,11 @@ export class User {
     const res = await mongo.isDowodOwner(this.ID, docID);
     return res;
   }
+  async isPassportOwner(docID: string): Promise<boolean> {
+    const mongo = new mongoController();
+    const res = await mongo.isPassportOwner(this.ID, docID);
+    return res;
+  }
 }
 
 // export function getUserID(token: string) {
