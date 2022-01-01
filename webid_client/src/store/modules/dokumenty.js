@@ -6,15 +6,25 @@ const resURI = "http://localhost:3000/api";
 
 const state = {
   dowod: {},
+  passport: {},
+
   allDowods: [],
+  allPassports: [],
 };
 
 const getters = {
   getCurrentDowod: (state) => state.dowod,
   getAllDowods: (state) => state.allDowods,
+  getCurrentPassport: (state) => state.passport,
+  getAllPassports: (state) => state.allPassports,
 };
 
 const actions = {
+  
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //  Dowod
+  ////////////////////////////////////////////////////////////////////////////////////////
+
   async uploadDowodToRecognize({ commit }, dowod) {
     let data = new FormData();
     console.log(dowod);
@@ -60,8 +70,59 @@ const actions = {
     commit("SET_DOWOD", response);
   },
   async deleteDowod({ commit }, id) {
-    const responce = await axios.delete(`${resURI}/dokuments/pl/dowod/${id}`)
-  }
+    const response = await axios.delete(`${resURI}/dokuments/pl/dowod/${id}`);
+  },
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //  Paszport
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  async uploadPassportToRecognize({ commit }, passport) {
+    let data = new FormData();
+    console.log(passport);
+    data.append("paszportImage", passport[0], passport[0].name);
+
+    const response = await axios.post(`${resURI}/dokuments/pl/paszport`, data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    console.log("responce :", response);
+    commit("SET_PASSPORT", response);
+  },
+  async updatePassport({ commit }, data) {
+    const payload = {
+      names: data.passport.names,
+      surname: data.passport.surname,
+      birthDate: data.passport.birthDate,
+      sex: data.passport.sex,
+      id: data.passport.id,
+      type: data.passport.type,
+      code: data.passport.code,
+      pesel: data.passport.pesel,
+      nationality: data.passport.nationality,
+      birthPlace: data.passport.birthPlace,
+      issueDate: data.passport.issueDate,
+      issuingAuthority: data.passport.issuingAuthority,
+      expiryDate: data.passport.expiryDate,
+      MRZ: data.passport.MRZ,
+    };
+    const response = await axios.put(
+      `${resURI}/dokuments/pl/paszport/${data.id}`,
+      payload
+    );
+  },
+  async fetchPassports({ commit }) {
+    const response = await axios.get(`${resURI}/dokuments/pl/paszport`);
+    commit("SET_PASSPORTS", response.data);
+  },
+  async fetchPassport({ commit }, id) {
+    const response = await axios.get(`${resURI}/dokuments/pl/paszport/${id}`);
+    commit("SET_PASSPORT", response);
+  },
+  async deletePassport({ commit }, id) {
+    const response = await axios.delete(`${resURI}/dokuments/pl/paszport/${id}`);
+  },
 };
 const mutations = {
   SET_DOWOD: (state, payload) => {
@@ -69,6 +130,14 @@ const mutations = {
   },
   SET_DOWODS: (state, payload) => {
     state.allDowods = "_embeded" in payload ? payload._embeded : [];
+  },
+  SET_PASSPORT: (state, payload) => {
+    state.passport = payload.data;
+  },
+  SET_PASSPORTS: (state, payload) => {
+    console.log(payload)
+    state.allPassports = "_embeded" in payload ? payload._embeded : [];
+    console.log(state.allPassports)
   },
 };
 
