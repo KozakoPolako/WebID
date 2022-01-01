@@ -235,7 +235,7 @@ router.get("/", keycloak.protect(), async (req, res, next) => {
       });
     } else {
       res.status(404).json({
-        message: "Nie znaleziono dokumentu",
+        message: "Nie znaleziono dokumentów",
       });
     }
   }

@@ -86,7 +86,7 @@ router.post(
           const recordID = record?.insertedId.toString();
 
           res.status(200).json({
-            paszport: temp,
+            passport: temp,
             id: recordID,
             faceURL: `${adress}/dokuments/pl/paszport/zdjecie/face/${recordID}`,
             photoURL: `${adress}/dokuments/pl/paszport/zdjecie/photo/${recordID}`,
@@ -144,6 +144,7 @@ router.get(
     }
   }
 );
+// Aktualizacja paszportu
 router.put("/:docID",keycloak.protect(), jsonParser, async(req,res,next) => {
   let authorized = true;
   if (req.token) {
@@ -161,6 +162,10 @@ router.put("/:docID",keycloak.protect(), jsonParser, async(req,res,next) => {
       try {
         const mongo = new mongoController();
         await mongo.updatePassport(passport, req.params.docID);
+
+        res.status(200).json({
+          message: "Udało się zapisać dokument",
+        });
       } catch (e) {
         console.log(e);
         res.status(400).json({
@@ -179,5 +184,96 @@ router.put("/:docID",keycloak.protect(), jsonParser, async(req,res,next) => {
     });
   }
 })
+//pobierz listę dokumentów
+router.get("/", keycloak.protect(), async (req, res, next) => {
+  if (!req.token) {
+    res.status(401).json({
+      message: "Brak uprawnień",
+    });
+  } else {
+    const mongo = new mongoController();
+    const documents = await mongo.getPassports(new User(req.token));
+    if (documents) {
+      const payload = documents.map((v) => {
+        const id = v._id?.toString();
+        return {
+          id: id,
+          photoURL: `${adress}/dokuments/pl/paszport/zdjecie/photo/${id}`,
+        };
+      });
+      res.status(200).json({
+        _embeded: payload,
+      });
+    } else {
+      res.status(404).json({
+        message: "Nie znaleziono dokumentów",
+      });
+    }
+  }
+});
+// pobierz dokument
+router.get("/:docID", keycloak.protect(), async (req, res, next) => {
+  let authorized = true;
+  if (req.token) {
+    const user = new User(req.token);
+    if (!((await user.isPassportOwner(req.params.docID)) || user.isAdmin)) {
+      authorized = false;
+    }
+  } else {
+    authorized = false;
+  }
+  if (authorized) {
+    const mongo = new mongoController();
+    const recordID = req.params.docID;
+    const document = await mongo.getPassport(recordID);
+    if (document) {
+      const passportData = document.dataHistory[document.dataHistory.length - 1];
+      res.status(200).json({
+        passport: passportData.documentData,
+        id: recordID,
+        faceURL: `${adress}/dokuments/pl/paszport/zdjecie/face/${recordID}`,
+        photoURL: `${adress}/dokuments/pl/paszport/zdjecie/photo/${recordID}`,
+      });
+    } else {
+      res.status(404).json({
+        message: "Nie znaleziono dokumentu",
+      });
+    }
+  } else {
+    res.status(401).json({
+      message: "Brak uprawnień",
+    });
+  }
+});
 
+// usuń dokument
+router.delete("/:docID", keycloak.protect(), async (req, res, next) => {
+  let authorized = true;
+  if (req.token) {
+    const user = new User(req.token);
+    if (!((await user.isPassportOwner(req.params.docID)) || user.isAdmin)) {
+      authorized = false;
+    }
+  } else {
+    authorized = false;
+  }
+  if (authorized) {
+    const mongo = new mongoController();
+    const recordID = req.params.docID;
+    try {
+      await mongo.deletePassport(recordID);
+      res.status(200).json({
+        message: "Udało się usunąć dokument",
+      });
+    } catch (error) {
+      res.status(400).json({
+        message: error,
+      });
+    }
+  } else {
+    res.status(401).json({
+      message: "Brak uprawnień",
+    });
+  }
+});
 export default router;

@@ -407,6 +407,63 @@ class Mongo {
       await this.client.close();
     }
   }
+  async getPassports(user: User): Promise<Array<PaszportPLDocument> | undefined> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+      this.usersCol = this.database.collection("uzytkownicy");
+      if(user.isAdmin) {
+        const documents = await this.passportsCol.find({ saved: true }).toArray();
+        return documents;
+      } else {
+        const userfilter = {
+          keykloakID: user.ID
+        }
+        const userInfo = await this.usersCol.findOne(userfilter);
+        if (!userInfo) return []
+        const filter = {
+          _id: {
+            $in: userInfo.paszports
+          },
+          saved: true,
+        };
+        const documents = await this.passportsCol.find(filter).toArray();
+        return documents;
+      }
+      
+
+      // const options = {
+      //   projection: {
+      //     _id: 1,
+      //   },
+      // }
+    } catch (error) {
+      console.log(`MongoERROR: ${error}`)
+      return []
+    } finally {
+      await this.client.close();
+    }
+  }
+  async deletePassport(id: string): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+
+      const results = await this.passportsCol.deleteOne({
+        _id: new ObjectID(id),
+      });
+      console.log(results);
+      if (results.deletedCount != 1) {
+        throw new Error("Nie udało się usunąć dokumentu");
+      }
+    } catch (error) {
+      console.log(`Delete Error: ${error}`);
+    } finally {
+      await this.client.close();
+    }
+  }
   async updatePassport(doc: Paszport, id: string): Promise<void> {
     try {
       await this.client.connect();
@@ -436,6 +493,7 @@ class Mongo {
     }
   }
 
+  
   ////////////////////////////////////////////////////////////////////////////////////////
   //  Autoryzacja
   ////////////////////////////////////////////////////////////////////////////////////////
