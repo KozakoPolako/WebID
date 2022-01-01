@@ -38,7 +38,7 @@ const routes = [
     component: () => import("../views/DocumentsView.vue"),
   },
   {
-    path: "/document/:docID",
+    path: "/document/:docType/:docID",
     name: "documentView",
     meta: {
       title: "Dokument",

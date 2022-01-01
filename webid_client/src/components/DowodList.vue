@@ -51,12 +51,8 @@ export default {
   methods: {
     ...mapActions(["fetchDowods"]),
     redirectToDowod(docID) {
-      this.$router.push({ name: "documentView", params: { docID: docID } });
+      this.$router.push({ name: "documentView", params: { docID: docID, docType:"dowod" } });
     },
-    downloadImage(url, e) {
-      console.log(url)
-      console.log(e)
-    }
   },
 };
 </script>

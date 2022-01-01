@@ -9,9 +9,17 @@
     <v-col>
       <h2>Prześlij zdjęcie {{ selTab ? "Paszportu" : "Dowodu" }}</h2>
       <file-upload
-        v-model="uploadFile"
+        v-show="selTab === 0"
+        ref="fileUpload"
+        v-model="dowodFile"
         multiple
         :filesLimit="2"
+        acceptExtension=".jpg, .png"
+        class="mt-4"
+      ></file-upload>
+      <file-upload
+        v-show="selTab === 1"
+        v-model="paszportFile"
         acceptExtension=".jpg, .png"
         class="mt-4"
       ></file-upload>
@@ -24,7 +32,7 @@
           width="250"
           color="green lighten-2"
           :loading="recLoading"
-          @click="uploadImage"
+          @click="selTab === 0 ? uploadDowodImage() : uploadPassportImage()"
         >
           Pobierz dane ze zdjęcia
         </v-btn>
@@ -66,23 +74,28 @@ export default {
   data() {
     return {
       recLoading: false,
-      uploadFile: [],
+      dowodFile: [],
+      paszportFile: [],
       showForm: false,
       tabs: ["Dowód osobisty", "Paszport"],
       selTab: null,
-      table: ["Start", "test123", "testowy dłuższy tekst tekstowy"],
     };
   },
   computed: {
     isFileLoaded() {
-      return !(this.uploadFile.length === 2);
+      if(this.selTab === 0)
+        return !(this.dowodFile.length === 2);
+      else
+        return !(this.paszportFile.length === 1);
     },
   },
+  watch: {
+  },
   methods: {
-    ...mapActions(["uploadDowodToRecognize"]),
-    uploadImage() {
+    ...mapActions(["uploadDowodToRecognize","uploadPassportToRecognize"]),
+    uploadDowodImage() {
       this.recLoading = true;
-      this.uploadDowodToRecognize(this.uploadFile)
+      this.uploadDowodToRecognize(this.dowodFile)
         .then(() => {
           console.log("success");
           this.showForm = true;
@@ -94,6 +107,20 @@ export default {
           this.recLoading = false;
         });
     },
+    uploadPassportImage() {
+      this.recLoading = true;
+      this.uploadPassportToRecognize(this.paszportFile)
+        .then(() => {
+          console.log("success");
+          this.showForm = true;
+        })
+        .catch((error) => {
+          console.log("error", error);
+        })
+        .finally(() => {
+          this.recLoading = false;
+        });
+    }
   },
 };
 </script>

@@ -372,7 +372,7 @@ export default {
           } else {
             this.$router.push({
               name: "documentView",
-              params: { docID: this.id },
+              params: { docID: this.id, docType: "dowod" },
             });
           }
         } catch (error) {

@@ -12,7 +12,8 @@
         <v-col cols="12" lg="9" xl="7">
           <v-row dense justify="end" align="center">
             <v-col cols="auto" :class="$vuetify.breakpoint.lgAndUp ?  '' : 'd-none'">
-              <h2>Dowod: {{ titleText }}</h2>
+              <h2 v-if="$route.params.docType === 'dowod'" >Dowod: {{ titleText }}</h2>
+              <h2 v-else>Paszport: {{ titleText }}</h2>
             </v-col>
             <v-spacer />
             <v-col cols="6" lg="auto">
@@ -60,7 +61,8 @@
     </v-app-bar>
     <h2 style="margin-top:50px" :class="$vuetify.breakpoint.lgAndUp ?  'd-none' : ''">Dowod: {{ titleText }}</h2>
     <div style="height: 150px"></div>
-    <dowod-form :readonly.sync="readonly" />
+    <dowod-form v-if="$route.params.docType === 'dowod'" :readonly.sync="readonly" />
+    <passport-form v-else :readonly.sync="readonly" />
     <v-dialog v-model="deleteDialog" width="500">
       <v-card>
         <v-card-title>Czy napewno chcesz usunąć dokument?</v-card-title>
@@ -68,7 +70,7 @@
         <v-card-actions>
           <v-row justify="end" dense>
             <v-col cols="auto">
-              <v-btn color="error" @click="removeDowod" plain>
+              <v-btn color="error" @click="$route.params.docType === 'dowod'? removeDowod() : removePassport() " plain>
                 Usuń
                 <v-icon class="ml-2 my-auto" size="18">
                   mdi-trash-can-outline
@@ -93,10 +95,11 @@
 <script>
 import { mapActions, mapGetters } from "vuex";
 import DowodForm from "../components/DowodForm.vue";
+import PassportForm from "../components/PaszportForm.vue"
 
 export default {
   name: "EditDowod",
-  components: { DowodForm },
+  components: { DowodForm, PassportForm },
   data() {
     return {
       titleText: "",
@@ -105,27 +108,43 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getCurrentDowod"]),
+    ...mapGetters(["getCurrentDowod", "getCurrentPassport"]),
     readonly() {
       return !this.editMode;
     },
   },
   async mounted() {
     try {
-      await this.fetchDowod(this.$route.params.docID);
-      this.titleText = `${this.getCurrentDowod.dowod.names} ${this.getCurrentDowod.dowod.surname}`;
+      if(this.$route.params.docType === "dowod") {
+        await this.fetchDowod(this.$route.params.docID);
+        this.titleText = `${this.getCurrentDowod.dowod.names} ${this.getCurrentDowod.dowod.surname}`;
+      } else  {
+        await this.fetchPassport(this.$route.params.docID);
+        this.titleText = `${this.getCurrentPassport.passport.names} ${this.getCurrentPassport.passport.surname}`;
+      }
+      
     } catch (error) {
+      console.log(error);
       this.$toast.error("Nie udało się pobrać dokumentu");
     }
   },
   methods: {
-    ...mapActions(["fetchDowod", "deleteDowod"]),
+    ...mapActions(["fetchDowod", "deleteDowod", "fetchPassport", "deletePassport"]),
     test() {
       this.$toast.success("test");
     },
     async removeDowod() {
       try {
         await this.deleteDowod(this.$route.params.docID);
+        this.$toast.success("Usunięto dokument");
+        this.$router.push({ name: "documentsView" });
+      } catch (error) {
+        this.$toast.error("Nie udało się usunąć dokumentu");
+      }
+    },
+    async removePassport() {
+      try {
+        await this.deletePassport(this.$route.params.docID);
         this.$toast.success("Usunięto dokument");
         this.$router.push({ name: "documentsView" });
       } catch (error) {
