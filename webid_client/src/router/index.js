@@ -38,7 +38,7 @@ const routes = [
     component: () => import("../views/DocumentsView.vue"),
   },
   {
-    path: "/document/:docID",
+    path: "/document/:docType/:docID",
     name: "documentView",
     meta: {
       title: "Dokument",
@@ -54,6 +54,15 @@ const routes = [
     },
 
     component: () => import("../views/SettingsView.vue"),
+  },
+  {
+    path: "/brak-dostepu",
+    name: "unauthorized",
+    meta: {
+      title: "Brak dostępu",
+    },
+
+    component: () => import("../views/Unauthorized.vue"),
   },
 
 ];

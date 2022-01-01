@@ -8,11 +8,14 @@ import {
   GridFSBucket,
   GridFSBucketReadStream,
   GridFSBucketWriteStream,
+  InsertOneResult,
   MongoClient,
   Timestamp,
 } from "mongodb";
 import { resolve } from "path/posix";
+import { User } from "../auth/User";
 import { Dowod } from "../rec/dowodOsoistyPL";
+import { Paszport } from "../rec/paszportPL";
 
 const CONNECTION_STRING = `mongodb://${process.env.MONGO_LOGIN}:${process.env.MONGO_PASSWORD}@webid-db`;
 
@@ -22,18 +25,31 @@ enum Documents {
 }
 
 interface documentData {
-  documentData: Dowod;
+  documentData: Dowod | Paszport;
   creationDate: Date;
 }
 
-export interface DowodPLDocument {
+type MongoUser = {
+  keykloakID: string;
+  dowods: ObjectID[];
+  paszports: ObjectID[];
+};
+
+export type DowodPLDocument = {
   _id?: ObjectID;
   faceID: ObjectID;
   frontID: ObjectID;
   backID: ObjectID;
   saved: boolean;
   dataHistory: documentData[];
-}
+};
+export type PaszportPLDocument = {
+  _id?: ObjectID;
+  faceID: ObjectID;
+  photoID: ObjectID;
+  saved: boolean;
+  dataHistory: documentData[];
+};
 interface ValidateSettings {
   type: Documents;
   lastChange: Date;
@@ -52,10 +68,11 @@ export interface DowodPLValidateRules {
 class Mongo {
   client: MongoClient;
   database: Db | undefined;
-  documentsCol: Collection<DowodPLDocument> | undefined;
+  dowodsCol: Collection<DowodPLDocument> | undefined;
+  passportsCol: Collection<PaszportPLDocument> | undefined;
   settingsCol: Collection<ValidateSettings> | undefined;
+  usersCol: Collection<MongoUser> | undefined;
 
-  usersCol: Collection<Document> | undefined;
   photosBucket: GridFSBucket | undefined;
 
   constructor() {
@@ -72,14 +89,24 @@ class Mongo {
       await this.client.close();
     }
   }
-  test() {
-    console.log("test test");
-  }
-  async insertDocument(doc: Dowod, frontName: string, backName: string) {
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //  Dowod
+  ////////////////////////////////////////////////////////////////////////////////////////
+  async insertDowod(
+    ownerID: string,
+    doc: Dowod,
+    frontName: string,
+    backName: string
+  ): Promise<InsertOneResult<DowodPLDocument> | null> {
     try {
+      if (!ownerID) {
+        return null;
+      }
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.documentsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dokumenty");
+      this.usersCol = this.database.collection("uzytkownicy");
       this.photosBucket = new GridFSBucket(this.database, {
         bucketName: "DowodPhotos",
       });
@@ -116,7 +143,23 @@ class Mongo {
           },
         ],
       };
-      return await this.documentsCol.insertOne(dowod);
+
+      const results = await this.dowodsCol.insertOne(dowod);
+
+      const filter = {
+        keykloakID: ownerID,
+      };
+      const update = {
+        $addToSet: {
+          dowods: results.insertedId,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
+      await this.usersCol.updateOne(filter, update, options);
+
+      return results;
     } catch (error) {
       console.log(`Insert Error: ${error}`);
       return null;
@@ -128,7 +171,7 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.documentsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dokumenty");
 
       const filter = {
         _id: new ObjectID(id),
@@ -142,7 +185,7 @@ class Mongo {
         },
         $set: { saved: true },
       };
-      const result = await this.documentsCol.updateOne(filter, update);
+      const result = await this.dowodsCol.updateOne(filter, update);
       console.log(
         `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
       );
@@ -179,9 +222,9 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.documentsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dokumenty");
 
-      const doc = await this.documentsCol.findOne<DowodPLDocument>({
+      const doc = await this.dowodsCol.findOne<DowodPLDocument>({
         _id: new ObjectID(id),
       });
       console.log(doc);
@@ -197,9 +240,9 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.documentsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dokumenty");
 
-      const results = await this.documentsCol.deleteOne({
+      const results = await this.dowodsCol.deleteOne({
         _id: new ObjectID(id),
       });
       console.log(results);
@@ -212,23 +255,38 @@ class Mongo {
       await this.client.close();
     }
   }
-  async getDowods(): Promise<Array<DowodPLDocument> | undefined> {
+  async getDowods(user: User): Promise<Array<DowodPLDocument> | undefined> {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.documentsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dokumenty");
+      this.usersCol = this.database.collection("uzytkownicy");
+      if(user.isAdmin) {
+        const documents = await this.dowodsCol.find({ saved: true }).toArray();
+        return documents;
+      } else {
+        const userfilter = {
+          keykloakID: user.ID
+        }
+        const userInfo = await this.usersCol.findOne(userfilter);
+        if (!userInfo) return []
 
-      const filter = {
-        saved: true,
-      };
+        const filter = {
+          _id: {
+            $in: userInfo.dowods
+          },
+          saved: true,
+        };
+        const documents = await this.dowodsCol.find(filter).toArray();
+        return documents;
+      }
+      
+
       // const options = {
       //   projection: {
       //     _id: 1,
       //   },
       // }
-
-      const documents = await this.documentsCol.find(filter).toArray();
-      return documents;
     } catch (error) {
     } finally {
       await this.client.close();
@@ -238,7 +296,7 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.documentsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dokumenty");
       this.photosBucket = new GridFSBucket(this.database, {
         bucketName: "DowodPhotos",
       });
@@ -274,6 +332,212 @@ class Mongo {
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////
+  //  Paszport
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  async insertPassport(ownerID: string, doc: Paszport, photoName: string) {
+    try {
+      if (!ownerID) {
+        return null;
+      }
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+      this.usersCol = this.database.collection("uzytkownicy");
+      this.photosBucket = new GridFSBucket(this.database, {
+        bucketName: "DowodPhotos",
+      });
+      const face = await this._uploadFile(
+        `./temporary/${photoName}/face.jpg`,
+        `${photoName}face.jpg`,
+        this.photosBucket
+      );
+      const photo = await this._uploadFile(
+        `./temporary/${photoName}/document.jpg`,
+        `${photoName}document.jpg`,
+        this.photosBucket
+      );
+      const passport: PaszportPLDocument = {
+        faceID: face.id,
+        photoID: photo.id,
+        saved: false,
+        dataHistory: [
+          {
+            creationDate: new Date(),
+            documentData: doc,
+          },
+        ],
+      };
+      const results = await this.passportsCol.insertOne(passport);
+      const filter = {
+        keykloakID: ownerID,
+      };
+      const update = {
+        $addToSet: {
+          paszports: results.insertedId,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
+      await this.usersCol.updateOne(filter, update, options);
+
+      return results;
+    } catch (error) {
+      console.log(`Insert Error: ${error}`);
+    } finally {
+      await this.client.close();
+    }
+  }
+
+  async getPassport(id: string): Promise<PaszportPLDocument | undefined> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+      const doc = await this.passportsCol.findOne<PaszportPLDocument>({
+        _id: new ObjectID(id),
+      });
+      console.log(doc);
+
+      return doc ? doc : undefined;
+    } catch (error) {
+      console.log(`Find Error: ${error}`);
+    } finally {
+      await this.client.close();
+    }
+  }
+  async getPassports(user: User): Promise<Array<PaszportPLDocument> | undefined> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+      this.usersCol = this.database.collection("uzytkownicy");
+      if(user.isAdmin) {
+        const documents = await this.passportsCol.find({ saved: true }).toArray();
+        return documents;
+      } else {
+        const userfilter = {
+          keykloakID: user.ID
+        }
+        const userInfo = await this.usersCol.findOne(userfilter);
+        if (!userInfo) return []
+        const filter = {
+          _id: {
+            $in: userInfo.paszports
+          },
+          saved: true,
+        };
+        const documents = await this.passportsCol.find(filter).toArray();
+        return documents;
+      }
+      
+
+      // const options = {
+      //   projection: {
+      //     _id: 1,
+      //   },
+      // }
+    } catch (error) {
+      console.log(`MongoERROR: ${error}`)
+      return []
+    } finally {
+      await this.client.close();
+    }
+  }
+  async deletePassport(id: string): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+
+      const results = await this.passportsCol.deleteOne({
+        _id: new ObjectID(id),
+      });
+      console.log(results);
+      if (results.deletedCount != 1) {
+        throw new Error("Nie udało się usunąć dokumentu");
+      }
+    } catch (error) {
+      console.log(`Delete Error: ${error}`);
+    } finally {
+      await this.client.close();
+    }
+  }
+  async updatePassport(doc: Paszport, id: string): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.passportsCol = this.database.collection("paszporty");
+      const filter = {
+        _id: new ObjectID(id),
+      };
+      const update = {
+        $addToSet: {
+          dataHistory: {
+            creationDate: new Date(),
+            documentData: doc,
+          },
+        },
+        $set: { saved: true },
+      };
+      const result = await this.passportsCol.updateOne(filter, update);
+      console.log(
+        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+      );
+    } catch (error) {
+      console.log("ERROR: ", error);
+      throw new Error("Nie udało się zapisać dowodu");
+    } finally {
+      await this.client.close()
+    }
+  }
+
+  
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //  Autoryzacja
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  async isDowodOwner(userID: string, id: string): Promise<boolean> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.usersCol = this.database.collection("uzytkownicy");
+      const filter = {
+        keykloakID: userID,
+        dowods: new ObjectID(id)
+      }
+      const results = await this.usersCol.findOne(filter)
+      //console.log("rezultaty:::\n",results)
+      return  !(results == null)
+    } catch (error) {
+      return false
+    } finally {
+      await this.client.close();
+      //return false;
+    }
+  }
+  async isPassportOwner(userID: string, id: string): Promise<boolean> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.usersCol = this.database.collection("uzytkownicy");
+      const filter = {
+        keykloakID: userID,
+        paszports: new ObjectID(id)
+      }
+      const results = await this.usersCol.findOne(filter)
+      //console.log("rezultaty:::\n",results)
+      return  !(results == null)
+    } catch (error) {
+      return false
+    } finally {
+      await this.client.close();
+      //return false;
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////
   //  Ustawnienia
   ////////////////////////////////////////////////////////////////////////////////////////
   async getDowodValidateRules(): Promise<DowodPLValidateRules | undefined> {
@@ -290,7 +554,7 @@ class Mongo {
 
       return rules?.value;
     } catch (error) {
-      console.log(`MongoError: ${error}`)
+      console.log(`MongoError: ${error}`);
     } finally {
       await this.client.close();
     }
@@ -298,34 +562,32 @@ class Mongo {
   }
   async setDowodValidateRules(newRules: DowodPLValidateRules): Promise<void> {
     try {
-        await this.client.connect();
-        this.database = this.client.db("WebID");
-        this.settingsCol = this.database.collection("ustawnienia");
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.settingsCol = this.database.collection("ustawnienia");
 
-        const filter = {
+      const filter = {
+        type: Documents.DOWOD,
+      };
+      const update = {
+        $set: {
           type: Documents.DOWOD,
-        };
-        const update = {
-          $set: {
-            type: Documents.DOWOD,
-            lastChange: new Date(),
-            value: newRules,
-          },
-        }
-        const options = {
-          upsert: true,
-        }
+          lastChange: new Date(),
+          value: newRules,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
 
-        const result = await this.settingsCol.updateOne(filter,update,options)
-        console.log(
-          `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
-        );
-      
-      } catch (error) {
-      
-      } finally {
-        await this.client.close();
-      }
+      const result = await this.settingsCol.updateOne(filter, update, options);
+      console.log(
+        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+      );
+    } catch (error) {
+    } finally {
+      await this.client.close();
+    }
   }
 }
 
@@ -336,7 +598,7 @@ export default Mongo;
 // try {
 //   await this.client.connect();
 //   this.database = this.client.db("WebID");
-//   this.documentsCol = this.database.collection("dokumenty");
+//   this.documentsCol = this.database.collection("paszporty");
 
 // } catch (error) {
 

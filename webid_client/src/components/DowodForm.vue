@@ -4,18 +4,18 @@
       <v-col cols="12" lg="9" xl="7">
         <v-row justify="center" class="mb-3">
           <v-card class="mb-5" justify="center" width="280" elevation="10">
-            <v-img :src="face" width="280" height="360" />
+            <auth-img :auth-src="face" width="280" height="360" />
           </v-card>
         </v-row>
         <v-row justify="center" class="mb-10">
           <v-col cols="12" md="6">
             <v-card max-width="650" class="mx-auto">
-              <v-img :src="front" max-width="650" />
+              <auth-img :auth-src="front" max-width="650" />
             </v-card>
           </v-col>
           <v-col cols="12" md="6" align-self="center">
             <v-card max-width="650" class="mx-auto">
-              <v-img :src="back" />
+              <auth-img :auth-src="back" />
             </v-card>
           </v-col>
         </v-row>
@@ -199,8 +199,10 @@
 
 <script>
 import { mapGetters, mapActions } from "vuex";
+import AuthImg from "./AuthImg"
 
 export default {
+  components: { AuthImg },
   props: {
     readonly: {
       type: Boolean,
@@ -370,7 +372,7 @@ export default {
           } else {
             this.$router.push({
               name: "documentView",
-              params: { docID: this.id },
+              params: { docID: this.id, docType: "dowod" },
             });
           }
         } catch (error) {

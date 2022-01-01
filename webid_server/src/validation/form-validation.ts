@@ -1,6 +1,7 @@
 import { parse } from "mrz";
 import mongoController from "../mongoController/mongoController";
 import { Dowod } from "../rec/dowodOsoistyPL";
+import { Paszport } from "../rec/paszportPL";
 import getDowodRules from "./dowodRules";
 
 type Data = Record<string, string>;
@@ -26,6 +27,10 @@ export default class FormValidation {
 
     return errors.length ? errors : true;
   }
+
+  ///////////////////////////////////////////////////////////////////////
+  // Dowod 
+  ///////////////////////////////////////////////////////////////////////
   static async validateDowod(dowod: Dowod): Promise<boolean | string[]> {
     const dowodRules = await getDowodRules();
     const firstStep = this.validate(dowod, dowodRules);
@@ -128,5 +133,12 @@ export default class FormValidation {
       return ["MRZ: Niepoprawna sekcja MRZ"];
     }
     return errors.length > 1 ? errors : true;
+  }
+  ///////////////////////////////////////////////////////////////////////
+  // Paszport
+  ///////////////////////////////////////////////////////////////////////
+  static async validatePassport(paszport: Paszport): Promise<boolean | string[]> {
+    return true;
+    //TODO
   }
 }

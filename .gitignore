@@ -6,6 +6,8 @@ node_modules
 dist
 temporary
 webid_db/db
+.env
+webid_auth/themes
 
 # local env files
 .env.local
@@ -27,3 +29,4 @@ pnpm-debug.log*
 *.sw?
 webid_server/pol.traineddata
 webid_server/pl.traineddata
+.env
