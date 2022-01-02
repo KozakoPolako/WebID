@@ -13,9 +13,11 @@
           </v-card>
         </v-row>
         <v-row justify="center" class="mb-10">
-          <v-card class="mb-5" justify="center" width="280">
-            <auth-img :auth-src="photo" />
-          </v-card>
+          <v-col cols="12" md="8" align-self="center">
+            <v-card max-width="650" class="mx-auto">
+              <auth-img :auth-src="photo" />
+            </v-card>
+          </v-col>
         </v-row>
 
         <v-row>
@@ -274,10 +276,19 @@ export default {
       }
     },
   },
+  async mounted() {
+    try {
+      console.log("TODO");
+    } catch (e) {
+      console.log(e);
+    } finally {
+      this.setRules();
+    }
+  },
   methods: {
-    ...mapActions(["updatePassport", "fetchPassport",]), //...mapActions(["updateDowod", "fetchDowod", "fetchDowodRules"]),
+    ...mapActions(["updatePassport", "fetchPassport"]), //...mapActions(["updateDowod", "fetchDowod", "fetchDowodRules"]),
     async savePassport() {
-       if (this.$refs.passportForm.validate()) {
+      if (this.$refs.passportForm.validate()) {
         try {
           this.saveLoading = true;
           console.log("przed wysłaniem", this.id);
@@ -288,7 +299,7 @@ export default {
           } else {
             this.$router.push({
               name: "documentView",
-              params: { docID: this.id, docType:"paszport" },
+              params: { docID: this.id, docType: "paszport" },
             });
           }
         } catch (error) {
@@ -296,12 +307,38 @@ export default {
           if (error.response.status === 406) {
             errorText.push(...error.response.data.errors);
           }
-          console.log(errorText)
+          console.log(errorText);
           this.$toast.error(`${errorText.join("\n")}`);
         } finally {
           this.saveLoading = false;
         }
       }
+    },
+    setRules() {
+      this.rules = {
+        namesRules: [this.generalRules.required, this.generalRules.onlyLetters],
+        surnameRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        birthDateRules: [this.generalRules.required],
+        sexRules: [this.generalRules.required],
+        idRules: [this.generalRules.required],
+        typeRules: [this.generalRules.required],
+        codeRules: [this.generalRules.required],
+        peselRules: [this.generalRules.required],
+        nationalityRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        birthPlaceRules: [
+          this.generalRules.required,
+          this.generalRules.onlyLetters,
+        ],
+        issueDateRules: [this.generalRules.required],
+        issuingAuthorityRules: [this.generalRules.required],
+        expiryDateRules: [this.generalRules.required],
+      };
     },
   },
 };
