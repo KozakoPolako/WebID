@@ -1,6 +1,16 @@
 <template>
   <v-container class="pa-6">
-    <v-row justify="caneter">
+    <v-btn
+      plain
+      size="50"
+      color="green"
+      class="my-3 px-2 text-h6"
+      @click="redirectToAddDowod"
+    >
+      Dodaj nowy Dowód
+      <v-icon size="30">mdi-plus</v-icon>
+    </v-btn>
+    <v-row>
       <v-col v-for="dowod in items" :key="dowod.id" cols="12" lg="3" sm="6">
         <v-card class="pa-0 rounded-lg green">
           <v-card-title class="py-1">Dowod:</v-card-title>
@@ -18,7 +28,7 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
-import AuthImg from "./AuthImg"
+import AuthImg from "./AuthImg";
 export default {
   name: "DowodList",
   components: { AuthImg },
@@ -51,7 +61,13 @@ export default {
   methods: {
     ...mapActions(["fetchDowods"]),
     redirectToDowod(docID) {
-      this.$router.push({ name: "documentView", params: { docID: docID, docType:"dowod" } });
+      this.$router.push({
+        name: "documentView",
+        params: { docID: docID, docType: "dowod" },
+      });
+    },
+    redirectToAddDowod() {
+      this.$router.push({ name: "addDocument" });
     },
   },
 };

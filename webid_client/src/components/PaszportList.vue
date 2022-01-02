@@ -1,14 +1,33 @@
 <template>
   <v-container class="pa-6">
-    <v-row justify="caneter">
-      <v-col v-for="passport in items" :key="passport.id" cols="12" lg="3" sm="6">
+    <v-btn
+      plain
+      size="50"
+      color="green"
+      class="my-3 px-2 text-h6"
+      @click="redirectToAddPassport"
+    >
+      Dodaj nowy Paszport
+      <v-icon size="30">mdi-plus</v-icon>
+    </v-btn>
+    <v-row>
+      <v-col
+        v-for="passport in items"
+        :key="passport.id"
+        cols="12"
+        lg="3"
+        sm="6"
+      >
         <v-card class="pa-0 rounded-lg green">
           <v-card-title class="py-1">Paszport:</v-card-title>
           <v-card-text
             class="white rounded-lg pa-2 ml-2 dowod-img"
             @click="redirectToPassport(passport.id)"
           >
-            <auth-img :auth-src="passport.photoURL" class="rounded-lg"></auth-img>
+            <auth-img
+              :auth-src="passport.photoURL"
+              class="rounded-lg"
+            ></auth-img>
           </v-card-text>
         </v-card>
       </v-col>
@@ -18,7 +37,7 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
-import AuthImg from "./AuthImg"
+import AuthImg from "./AuthImg";
 export default {
   name: "PaszportList",
   components: { AuthImg },
@@ -44,7 +63,16 @@ export default {
   methods: {
     ...mapActions(["fetchPassports"]),
     redirectToPassport(docID) {
-      this.$router.push({ name: "documentView", params: { docID: docID, docType:"paszport" } });
+      this.$router.push({
+        name: "documentView",
+        params: { docID: docID, docType: "paszport" },
+      });
+    },
+    redirectToAddPassport() {
+      this.$router.push({
+        name: "addDocument",
+        params: { mode: "paszport" },
+      });
     },
   },
 };

@@ -78,7 +78,7 @@ export default {
       paszportFile: [],
       showForm: false,
       tabs: ["Dowód osobisty", "Paszport"],
-      selTab: null,
+      selTab: "mode" in this.$route.params ? this.$route.params.mode === 'paszport' ? 1 : 0 : 0,
     };
   },
   computed: {
