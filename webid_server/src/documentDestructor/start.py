@@ -82,8 +82,8 @@ def cropFace(filename) :
   cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
 def cropFacePassport(filename) :
   face = cv2.imread(outputDir+fileName+"/document.jpg")
-  [[[1040, 576]],[[ 50, 576]],[[ 50, 1755]],[[1040, 1755]]]
-  cropedFace = face[576:1755, 50:1040]
+  [[[520, 288]],[[ 24, 288]],[[ 24, 876]],[[520, 876]]]
+  cropedFace = face[288:876, 24:520]
   cv2.imwrite(outputDir+fileName+"/face.jpg", cropedFace)
 
 
