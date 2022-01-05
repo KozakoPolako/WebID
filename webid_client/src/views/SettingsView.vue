@@ -17,8 +17,8 @@
               Reguły walidacji: {{ tabs[i] }}
             </v-card-title>
             <v-card-text class="ml-2 pl-6 pb-1 white rounded-lg dowod-img">
-              <paszport-validation-rules v-if="i" />
-              <dowod-validation-rules color="green" v-else />
+              <paszport-validation-rules color="green" v-show="i" />
+              <dowod-validation-rules color="green" v-show="!i" />
             </v-card-text>
           </v-card>
         </v-tab-item>
@@ -49,9 +49,16 @@ export default {
       console.log(error)
       this.$toast.error("Nie udało się pobrać reguł walidacji dowodu")
     }
+    try {
+      await this.fetchPaszportRules()
+    } catch (error) {
+      console.log(error)
+      this.$toast.error("Nie udało się pobrać reguł walidacji paszportu")
+    }
+
   },
   methods: {
-    ...mapActions(["fetchDowodRules"]),
+    ...mapActions(["fetchDowodRules","fetchPaszportRules"]),
   },
 };
 </script>
