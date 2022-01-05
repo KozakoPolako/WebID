@@ -255,7 +255,8 @@ export default {
           sexCheck: (v) => /[FM]/.test(v) || "F - Kobieta M - Mężczyzna",
         },
         idRules: {
-          controlCheck: (v) => this.isValidNumerPaszportu(v) || "Nieprawidłowy numer Paszportu"
+          controlCheck: (v) =>
+            this.isValidNumerPaszportu(v) || "Nieprawidłowy numer Paszportu",
         },
         typeRules: {},
         codeRules: {},
@@ -327,7 +328,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getCurrentPassport", "getPassportRules"]),
+    ...mapGetters(["getCurrentPassport", "getPaszportRules"]),
   },
   watch: {
     getCurrentPassport: {
@@ -347,7 +348,7 @@ export default {
   },
   async mounted() {
     try {
-      console.log("TODO");
+      await this.fetchPaszportRules();
     } catch (e) {
       console.log(e);
     } finally {
@@ -358,7 +359,7 @@ export default {
     console.log(this.passport.birthDate);
   },
   methods: {
-    ...mapActions(["updatePassport", "fetchPassport"]), //...mapActions(["updateDowod", "fetchDowod", "fetchDowodRules"]),
+    ...mapActions(["updatePassport", "fetchPassport", "fetchPaszportRules"]),
     async savePassport() {
       if (this.$refs.passportForm.validate()) {
         try {
@@ -450,7 +451,7 @@ export default {
           return i;
         }
       }
-      if (letter === "<") return 0
+      if (letter === "<") return 0;
       return -1;
     },
     isValidNumerPaszportu(v) {
@@ -469,53 +470,127 @@ export default {
       return sum === this.getValueFromLetter(numerDigits[2]);
     },
     setRules() {
-      this.rules = {
-        namesRules: [this.generalRules.required, this.generalRules.onlyLetters],
-        surnameRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        birthDateRules: [
-          this.generalRules.required,
-          this.generalRules.isDate,
-          this.generalRules.isInFuture,
-          this.rulesList.birthDateRules.isAdults,
-        ],
-        sexRules: [
-          this.generalRules.required,
-          this.rulesList.sexRules.sexCheck,
-        ],
-        idRules: [this.generalRules.required, this.rulesList.idRules.controlCheck],
-        typeRules: [this.generalRules.required],
-        codeRules: [this.generalRules.required],
-        peselRules: [
-          this.generalRules.required,
-          this.rulesList.peselRules.lengthCheck,
-          this.rulesList.peselRules.dateCheck,
-          this.rulesList.peselRules.controlCheck,
-        ],
-        nationalityRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        birthPlaceRules: [
-          this.generalRules.required,
-          this.generalRules.onlyLetters,
-        ],
-        issueDateRules: [
-          this.generalRules.required,
-          this.generalRules.isDate,
-          this.rulesList.issueDateRules.isBeforeExpiry,
-          this.rulesList.issueDateRules.isInBuissnesDay,
-          this.generalRules.isInFuture,
-        ],
-        issuingAuthorityRules: [this.generalRules.required],
-        expiryDateRules: [
-          this.generalRules.required,
-          this.generalRules.isDate,
-          this.rulesList.expiryDateRules.expiryCheck,
-        ],
-      };
+      this.rules = this.getPaszportRules
+        ? {
+            namesRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            surnameRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthDateRules: this.getPaszportRules.isAdultsOnly
+              ? [
+                  this.generalRules.required,
+                  this.generalRules.isDate,
+                  this.generalRules.isInFuture,
+                  this.rulesList.birthDateRules.isAdults,
+                ]
+              : [this.generalRules.required, this.generalRules.isInFuture],
+            sexRules: [
+              this.generalRules.required,
+              this.rulesList.sexRules.sexCheck,
+            ],
+            idRules: this.getPaszportRules.isIDControl
+              ? [
+                  this.generalRules.required,
+                  this.rulesList.idRules.controlCheck,
+                ]
+              : [this.generalRules.required],
+            typeRules: [this.generalRules.required],
+            codeRules: [this.generalRules.required],
+            peselRules: this.getPaszportRules.isPeselControl
+              ? [
+                  this.generalRules.required,
+                  this.rulesList.peselRules.lengthCheck,
+                  this.rulesList.peselRules.dateCheck,
+                  this.rulesList.peselRules.controlCheck,
+                ]
+              : [
+                  this.generalRules.required,
+                  this.rulesList.peselRules.lengthCheck,
+                  this.rulesList.peselRules.dateCheck,
+                ],
+            nationalityRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthPlaceRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            issueDateRules: this.getPaszportRules.isIssueDateCorrect
+              ? [
+                  this.generalRules.required,
+                  this.generalRules.isDate,
+                  this.rulesList.issueDateRules.isBeforeExpiry,
+                  this.rulesList.issueDateRules.isInBuissnesDay,
+                  this.generalRules.isInFuture,
+                ]
+              : [this.generalRules.required, this.generalRules.isDate],
+            issuingAuthorityRules: [this.generalRules.required],
+            expiryDateRules: this.getPaszportRules.isNotExpired
+              ? [
+                  this.generalRules.required,
+                  this.generalRules.isDate,
+                  this.rulesList.expiryDateRules.expiryCheck,
+                ]
+              : [this.generalRules.required, this.generalRules.isDate],
+          }
+        : {
+            namesRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            surnameRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthDateRules: [
+              this.generalRules.required,
+              this.generalRules.isDate,
+              this.generalRules.isInFuture,
+              this.rulesList.birthDateRules.isAdults,
+            ],
+            sexRules: [
+              this.generalRules.required,
+              this.rulesList.sexRules.sexCheck,
+            ],
+            idRules: [
+              this.generalRules.required,
+              this.rulesList.idRules.controlCheck,
+            ],
+            typeRules: [this.generalRules.required],
+            codeRules: [this.generalRules.required],
+            peselRules: [
+              this.generalRules.required,
+              this.rulesList.peselRules.lengthCheck,
+              this.rulesList.peselRules.dateCheck,
+              this.rulesList.peselRules.controlCheck,
+            ],
+            nationalityRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            birthPlaceRules: [
+              this.generalRules.required,
+              this.generalRules.onlyLetters,
+            ],
+            issueDateRules: [
+              this.generalRules.required,
+              this.generalRules.isDate,
+              this.rulesList.issueDateRules.isBeforeExpiry,
+              this.rulesList.issueDateRules.isInBuissnesDay,
+              this.generalRules.isInFuture,
+            ],
+            issuingAuthorityRules: [this.generalRules.required],
+            expiryDateRules: [
+              this.generalRules.required,
+              this.generalRules.isDate,
+              this.rulesList.expiryDateRules.expiryCheck,
+            ],
+          };
     },
   },
 };
