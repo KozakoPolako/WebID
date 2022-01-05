@@ -48,6 +48,7 @@
             <v-text-field
               color="green"
               v-model="passport.birthDate"
+              type="date"
               :rules="rules.birthDateRules"
               label="Data urodzenia"
               required
@@ -81,7 +82,7 @@
             <v-text-field
               color="green"
               v-model="passport.id"
-              v-mask="'AA #######'"
+              v-mask="'XX #######'"
               :counter="100"
               :rules="rules.idRules"
               label="Numer paszportu"
@@ -150,7 +151,7 @@
             <v-text-field
               color="green"
               v-model="passport.issueDate"
-              v-mask="'##.##.####'"
+              type="date"
               :counter="10"
               :rules="rules.issueDateRules"
               label="Data Wydania"
@@ -161,7 +162,7 @@
             <v-text-field
               color="green"
               v-model="passport.expiryDate"
-              v-mask="'##.##.####'"
+              type="date"
               :counter="10"
               :rules="rules.expiryDateRules"
               label="Termin Ważności"
@@ -243,12 +244,80 @@ export default {
         issuingAuthorityRules: [],
         expiryDateRules: [],
       },
+      rulesList: {
+        namesRules: {},
+        surnameRules: {},
+        birthDateRules: {
+          isAdults: (v) =>
+            this.yearBetween(new Date(v)) >= 18 || "Musisz mieć 18 lat",
+        },
+        sexRules: {
+          sexCheck: (v) => /[FM]/.test(v) || "F - Kobieta M - Mężczyzna",
+        },
+        idRules: {
+          controlCheck: (v) => this.isValidNumerPaszportu(v) || "Nieprawidłowy numer Paszportu"
+        },
+        typeRules: {},
+        codeRules: {},
+        peselRules: {
+          lengthCheck: (v) =>
+            /^[0-9]{11}$/.test(v) || "Numer Pesel musi zawierać 11 cyfr",
+          dateCheck: (v) =>
+            (parseInt(v.substring(4, 6)) <= 31 &&
+              parseInt(v.substring(2, 4)) <= 12) ||
+            "Nieprawidłowy numer Pesel", // sprawdzenie czy liczby zawiewierające rok urodzenia są poprawna datą
+          controlCheck: (v) => {
+            const digits = ("" + v).split("");
+            let checksum =
+              (1 * parseInt(digits[0]) +
+                3 * parseInt(digits[1]) +
+                7 * parseInt(digits[2]) +
+                9 * parseInt(digits[3]) +
+                1 * parseInt(digits[4]) +
+                3 * parseInt(digits[5]) +
+                7 * parseInt(digits[6]) +
+                9 * parseInt(digits[7]) +
+                1 * parseInt(digits[8]) +
+                3 * parseInt(digits[9])) %
+              10;
+            if (checksum == 0) {
+              checksum = 10;
+            }
+            checksum = 10 - checksum;
+            return (
+              parseInt(digits[10]) === checksum || "Nieprawidłowy numer Pesel"
+            ); // sprawdzenie sumy kontrolnej
+          },
+        },
+        nationalityRules: {},
+        birthPlaceRules: {},
+        issueDateRules: {
+          isInBuissnesDay: (v) =>
+            new Date(v).getDay() % 6 !== 0 ||
+            "Dokument nie mógł zostać wydany w sobotę ani w niedzielę",
+          isBeforeExpiry: (v) =>
+            !this.passport.expiryDate ||
+            new Date(v) < new Date(this.passport.expiryDate) ||
+            "Data wydania nie może być późniejsza niż termin ważności",
+        },
+        issuingAuthorityRules: {},
+        expiryDateRules: {
+          expiryCheck: (v) => {
+            return (
+              new Date(v).setHours(0, 0, 0, 0) >=
+                new Date().setHours(0, 0, 0, 0) ||
+              "Data ważności dokumentu wygasła"
+            );
+          },
+        },
+      },
       generalRules: {
         required: (v) => !!v || "Pole wymagane",
         isDate: (v) =>
-          /^(((0)[0-9])|((1)[0-2]))(\.)([0-2][0-9]|(3)[0-1])(\.)\d{4}$/.test(
+          // eslint-disable-next-line
+          /^\d{4}(\-)(((0)[0-9])|((1)[0-2]))(\-)([0-2][0-9]|(3)[0-1])$/.test(
             v
-          ) || "Wprowadź datę w formacie mm.dd.rrrr",
+          ) || "Wprowadź datę w formacie dd.mm.rrrr",
         onlyLetters: (v) =>
           /^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ ]+$/.test(v) ||
           "Wprowadzono niedozwolone znaki",
@@ -285,6 +354,9 @@ export default {
       this.setRules();
     }
   },
+  updated() {
+    console.log(this.passport.birthDate);
+  },
   methods: {
     ...mapActions(["updatePassport", "fetchPassport"]), //...mapActions(["updateDowod", "fetchDowod", "fetchDowodRules"]),
     async savePassport() {
@@ -314,6 +386,88 @@ export default {
         }
       }
     },
+    yearBetween(oldDate) {
+      const today = new Date();
+
+      const yToday = today.getFullYear();
+      const mToday = today.getMonth();
+      const dToday = today.getDate();
+
+      const yOld = oldDate.getFullYear();
+      const mOld = oldDate.getMonth();
+      const dOld = oldDate.getDate();
+
+      let years = yToday - yOld;
+      if (mOld > mToday) years--;
+      else {
+        if (mOld == mToday) {
+          if (dOld > dToday) years--;
+        }
+      }
+      return years;
+    },
+    getValueFromLetter(letter) {
+      const values = [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+      ];
+      for (let i = 0; i < values.length; i++) {
+        if (letter === values[i]) {
+          return i;
+        }
+      }
+      if (letter === "<") return 0
+      return -1;
+    },
+    isValidNumerPaszportu(v) {
+      const numerDigits = v.toUpperCase().replace(/ /g, "");
+      let sum =
+        (7 * this.getValueFromLetter(numerDigits[0]) +
+          3 * this.getValueFromLetter(numerDigits[1]) +
+          // 1 * this.getValueFromLetter(numerDigits[2]) +
+          1 * this.getValueFromLetter(numerDigits[3]) +
+          7 * this.getValueFromLetter(numerDigits[4]) +
+          3 * this.getValueFromLetter(numerDigits[5]) +
+          1 * this.getValueFromLetter(numerDigits[6]) +
+          7 * this.getValueFromLetter(numerDigits[7]) +
+          3 * this.getValueFromLetter(numerDigits[8])) %
+        10;
+      return sum === this.getValueFromLetter(numerDigits[2]);
+    },
     setRules() {
       this.rules = {
         namesRules: [this.generalRules.required, this.generalRules.onlyLetters],
@@ -321,12 +475,25 @@ export default {
           this.generalRules.required,
           this.generalRules.onlyLetters,
         ],
-        birthDateRules: [this.generalRules.required],
-        sexRules: [this.generalRules.required],
-        idRules: [this.generalRules.required],
+        birthDateRules: [
+          this.generalRules.required,
+          this.generalRules.isDate,
+          this.generalRules.isInFuture,
+          this.rulesList.birthDateRules.isAdults,
+        ],
+        sexRules: [
+          this.generalRules.required,
+          this.rulesList.sexRules.sexCheck,
+        ],
+        idRules: [this.generalRules.required, this.rulesList.idRules.controlCheck],
         typeRules: [this.generalRules.required],
         codeRules: [this.generalRules.required],
-        peselRules: [this.generalRules.required],
+        peselRules: [
+          this.generalRules.required,
+          this.rulesList.peselRules.lengthCheck,
+          this.rulesList.peselRules.dateCheck,
+          this.rulesList.peselRules.controlCheck,
+        ],
         nationalityRules: [
           this.generalRules.required,
           this.generalRules.onlyLetters,
@@ -335,9 +502,19 @@ export default {
           this.generalRules.required,
           this.generalRules.onlyLetters,
         ],
-        issueDateRules: [this.generalRules.required],
+        issueDateRules: [
+          this.generalRules.required,
+          this.generalRules.isDate,
+          this.rulesList.issueDateRules.isBeforeExpiry,
+          this.rulesList.issueDateRules.isInBuissnesDay,
+          this.generalRules.isInFuture,
+        ],
         issuingAuthorityRules: [this.generalRules.required],
-        expiryDateRules: [this.generalRules.required],
+        expiryDateRules: [
+          this.generalRules.required,
+          this.generalRules.isDate,
+          this.rulesList.expiryDateRules.expiryCheck,
+        ],
       };
     },
   },
