@@ -45,8 +45,8 @@ export default async function getDowodRules(): Promise<DowodRules> {
 const generalRules = {
   required: (v: string) => !!v || "Pole wymagane",
   isDate: (v: string) =>
-    /^(((0)[0-9])|((1)[0-2]))(\.)([0-2][0-9]|(3)[0-1])(\.)\d{4}$/.test(v) ||
-    "Wprowadź datę w formacie mm.dd.rrrr",
+    /^\d{4}(\-)(((0)[0-9])|((1)[0-2]))(\-)([0-2][0-9]|(3)[0-1])$/.test(v) ||
+    "Wprowadź datę w formacie dd.mm.rrrr",
   onlyLetters: (v: string) =>
     /^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ ]+$/.test(v) ||
     "Wprowadzono niedozwolone znaki",
