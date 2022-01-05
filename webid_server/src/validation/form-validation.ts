@@ -3,6 +3,7 @@ import mongoController from "../mongoController/mongoController";
 import { Dowod } from "../rec/dowodOsoistyPL";
 import { Paszport } from "../rec/paszportPL";
 import getDowodRules from "./dowodRules";
+import getPaszportRules from "./paszportRules";
 
 type Data = Record<string, string>;
 
@@ -138,7 +139,9 @@ export default class FormValidation {
   // Paszport
   ///////////////////////////////////////////////////////////////////////
   static async validatePassport(paszport: Paszport): Promise<boolean | string[]> {
-    return true;
+    const paszportRules = await getPaszportRules();
+    const firstStep = this.validate(paszport, paszportRules)
+    return firstStep
     //TODO
   }
 }
