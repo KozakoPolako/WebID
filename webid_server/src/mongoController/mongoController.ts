@@ -53,9 +53,9 @@ export type PaszportPLDocument = {
 interface ValidateSettings {
   type: Documents;
   lastChange: Date;
-  value: DowodPLValidateRules;
+  value: ValidateRules;
 }
-export interface DowodPLValidateRules {
+export interface ValidateRules {
   isNotExpired: boolean;
   isIssueDateCorrect: boolean;
   isPeselControl: boolean;
@@ -261,26 +261,25 @@ class Mongo {
       this.database = this.client.db("WebID");
       this.dowodsCol = this.database.collection("dokumenty");
       this.usersCol = this.database.collection("uzytkownicy");
-      if(user.isAdmin) {
+      if (user.isAdmin) {
         const documents = await this.dowodsCol.find({ saved: true }).toArray();
         return documents;
       } else {
         const userfilter = {
-          keykloakID: user.ID
-        }
+          keykloakID: user.ID,
+        };
         const userInfo = await this.usersCol.findOne(userfilter);
-        if (!userInfo) return []
+        if (!userInfo) return [];
 
         const filter = {
           _id: {
-            $in: userInfo.dowods
+            $in: userInfo.dowods,
           },
           saved: true,
         };
         const documents = await this.dowodsCol.find(filter).toArray();
         return documents;
       }
-      
 
       // const options = {
       //   projection: {
@@ -407,31 +406,34 @@ class Mongo {
       await this.client.close();
     }
   }
-  async getPassports(user: User): Promise<Array<PaszportPLDocument> | undefined> {
+  async getPassports(
+    user: User
+  ): Promise<Array<PaszportPLDocument> | undefined> {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
       this.passportsCol = this.database.collection("paszporty");
       this.usersCol = this.database.collection("uzytkownicy");
-      if(user.isAdmin) {
-        const documents = await this.passportsCol.find({ saved: true }).toArray();
+      if (user.isAdmin) {
+        const documents = await this.passportsCol
+          .find({ saved: true })
+          .toArray();
         return documents;
       } else {
         const userfilter = {
-          keykloakID: user.ID
-        }
+          keykloakID: user.ID,
+        };
         const userInfo = await this.usersCol.findOne(userfilter);
-        if (!userInfo) return []
+        if (!userInfo) return [];
         const filter = {
           _id: {
-            $in: userInfo.paszports
+            $in: userInfo.paszports,
           },
           saved: true,
         };
         const documents = await this.passportsCol.find(filter).toArray();
         return documents;
       }
-      
 
       // const options = {
       //   projection: {
@@ -439,8 +441,8 @@ class Mongo {
       //   },
       // }
     } catch (error) {
-      console.log(`MongoERROR: ${error}`)
-      return []
+      console.log(`MongoERROR: ${error}`);
+      return [];
     } finally {
       await this.client.close();
     }
@@ -489,11 +491,10 @@ class Mongo {
       console.log("ERROR: ", error);
       throw new Error("Nie udało się zapisać dowodu");
     } finally {
-      await this.client.close()
+      await this.client.close();
     }
   }
 
-  
   ////////////////////////////////////////////////////////////////////////////////////////
   //  Autoryzacja
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -505,13 +506,13 @@ class Mongo {
       this.usersCol = this.database.collection("uzytkownicy");
       const filter = {
         keykloakID: userID,
-        dowods: new ObjectID(id)
-      }
-      const results = await this.usersCol.findOne(filter)
+        dowods: new ObjectID(id),
+      };
+      const results = await this.usersCol.findOne(filter);
       //console.log("rezultaty:::\n",results)
-      return  !(results == null)
+      return !(results == null);
     } catch (error) {
-      return false
+      return false;
     } finally {
       await this.client.close();
       //return false;
@@ -524,13 +525,13 @@ class Mongo {
       this.usersCol = this.database.collection("uzytkownicy");
       const filter = {
         keykloakID: userID,
-        paszports: new ObjectID(id)
-      }
-      const results = await this.usersCol.findOne(filter)
+        paszports: new ObjectID(id),
+      };
+      const results = await this.usersCol.findOne(filter);
       //console.log("rezultaty:::\n",results)
-      return  !(results == null)
+      return !(results == null);
     } catch (error) {
-      return false
+      return false;
     } finally {
       await this.client.close();
       //return false;
@@ -540,7 +541,7 @@ class Mongo {
   ////////////////////////////////////////////////////////////////////////////////////////
   //  Ustawnienia
   ////////////////////////////////////////////////////////////////////////////////////////
-  async getDowodValidateRules(): Promise<DowodPLValidateRules | undefined> {
+  async getDowodValidateRules(): Promise<ValidateRules | undefined> {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
@@ -552,7 +553,20 @@ class Mongo {
 
       const rules = await this.settingsCol.findOne(filter);
 
-      return rules?.value;
+      if (!rules) {
+        const setRules: ValidateRules = {
+          isNotExpired: true,
+          isIssueDateCorrect: true,
+          isPeselControl: true,
+          isIDControl: true,
+          isMRZContol: true,
+          isAdultsOnly: true,
+          isData_MRZValid: true,
+        };
+        return setRules;
+      } else {
+        return rules.value;
+      }
     } catch (error) {
       console.log(`MongoError: ${error}`);
     } finally {
@@ -560,7 +574,71 @@ class Mongo {
     }
     return undefined;
   }
-  async setDowodValidateRules(newRules: DowodPLValidateRules): Promise<void> {
+  async getPaszportValidateRules(): Promise<ValidateRules | undefined> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.settingsCol = this.database.collection("ustawnienia");
+
+      const filter = {
+        type: Documents.PASZPORT,
+      };
+
+      const rules = await this.settingsCol.findOne(filter);
+
+      if (!rules) {
+        const setRules: ValidateRules = {
+          isNotExpired: true,
+          isIssueDateCorrect: true,
+          isPeselControl: true,
+          isIDControl: true,
+          isMRZContol: true,
+          isAdultsOnly: true,
+          isData_MRZValid: true,
+        };
+        return setRules;
+      } else {
+        return rules.value;
+      }
+    } catch (error) {
+      console.log(`MongoError: ${error}`);
+    } finally {
+      await this.client.close();
+    }
+    return undefined;
+  }
+
+  async setPaszportValidateRules(newRules: ValidateRules): Promise<void> {
+    try {
+      await this.client.connect();
+      this.database = this.client.db("WebID");
+      this.settingsCol = this.database.collection("ustawnienia");
+
+      const filter = {
+        type: Documents.PASZPORT,
+      };
+      const update = {
+        $set: {
+          type: Documents.PASZPORT,
+          lastChange: new Date(),
+          value: newRules,
+        },
+      };
+      const options = {
+        upsert: true,
+      };
+
+      const result = await this.settingsCol.updateOne(filter, update, options);
+      console.log(
+        `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`
+      );
+    } catch (error) {
+    } finally {
+      await this.client.close();
+    }
+  }
+
+  async setDowodValidateRules(newRules: ValidateRules): Promise<void> {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");

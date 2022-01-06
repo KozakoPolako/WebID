@@ -70,6 +70,7 @@
             <v-text-field
               color="green"
               v-model="dowod.birthDate"
+              type="date"
               :rules="rules.birthDateRules"
               label="Data urodzenia"
               required
@@ -104,7 +105,7 @@
             <v-text-field
               color="green"
               v-model="dowod.id"
-              v-mask="'AAA ######'"
+              v-mask="'XXX ######'"
               :counter="100"
               :rules="rules.idRules"
               label="Seria, numer dowodu"
@@ -153,7 +154,7 @@
             <v-text-field
               color="green"
               v-model="dowod.issueDate"
-              v-mask="'##.##.####'"
+              type="date"
               :counter="10"
               :rules="rules.issueDateRules"
               label="Data Wydania"
@@ -164,7 +165,7 @@
             <v-text-field
               color="green"
               v-model="dowod.expiryDate"
-              v-mask="'##.##.####'"
+              type="date"
               :counter="10"
               :rules="rules.expiryDateRules"
               label="Termin Ważności"
@@ -251,7 +252,8 @@ export default {
       generalRules: {
         required: (v) => !!v || "Pole wymagane",
         isDate: (v) =>
-          /^(((0)[0-9])|((1)[0-2]))(\.)([0-2][0-9]|(3)[0-1])(\.)\d{4}$/.test(
+          // eslint-disable-next-line
+          /^\d{4}(\-)(((0)[0-9])|((1)[0-2]))(\-)([0-2][0-9]|(3)[0-1])$/.test(
             v
           ) || "Wprowadź datę w formacie mm.dd.rrrr",
         onlyLetters: (v) =>
@@ -431,6 +433,7 @@ export default {
           return i;
         }
       }
+      if (letter === "<") return 0
       return -1;
     },
     isValidSeriaDowodu(v) {

@@ -43,6 +43,9 @@ input#username.pf-c-form-control, input#passeord.pf-c-form-control {
 textarea.pf-c-form-control {
 	height: auto;
 }
+input.pf-c-form-control:-webkit-autofill{
+    background-color: rgba(var(--color-main-rgb),0.08)  !important;
+}
 input:-internal-autofill-selected{
     background-color: rgba(var(--color-main-rgb),0.08) !important;
 }

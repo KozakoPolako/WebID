@@ -1,15 +1,30 @@
 import Tesseract, { createWorker } from "tesseract.js";
 import { Dowod } from "./dowodOsoistyPL";
 import { Paszport } from "./paszportPL";
-
-
+import strSim from "string-similarity";
 
 class TesseractWorkers {
   workers: Tesseract.Worker[] = [];
-  dateRegex = /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )(((0)[0-9])|((1)[0-2]))(\/|\.|\-|\ )\d{4}/
-  passportDataRegex = /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )([A-Z]{3}\/[A-Z]{3})(\/|\.|\-|\ )\d{4}/
-  LetersList = "AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ "
-  NumberList = "1234567890"
+  dateRegex =
+    /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )(((0)[0-9])|((1)[0-2]))(\/|\.|\-|\ )\d{4}/;
+  passportDataRegex =
+    /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )([A-Z]{3}\/[A-Z]{3})(\/|\.|\-|\ )\d{4}/;
+  passportMonths = [
+    "STY/JAN",
+    "LUT/FEB",
+    "MAR/MAR",
+    "KWI/APR",
+    "MAJ/MAY",
+    "CZE/JUN",
+    "LIP/JUN",
+    "SIE/AUG",
+    "WRZ/SEP",
+    "PAŹ/OCT",
+    "LIS/NOV",
+    "GRU/DEC",
+  ];
+  LetersList = "AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ ";
+  NumberList = "1234567890";
 
   constructor() {
     this.prepareWorkers();
@@ -25,28 +40,39 @@ class TesseractWorkers {
       await this.workers[i].loadLanguage("pol");
       await this.workers[i].initialize("pol");
     }
-    console.log("workers ready...")
+    console.log("workers ready...");
   }
-  prepareText(text:string) : string {
+  prepareText(text: string): string {
     let output = text.replace(/\n/g, " ");
-    output = output.split(" ").filter(val => val.length >=3).join(" ")
-    return output
-
+    output = output
+      .split(" ")
+      .filter((val) => val.length >= 3)
+      .join(" ");
+    return output;
   }
-  prepareDate(date:string) : string {
-    let matchArray = date.match(this.dateRegex)
-    let output = matchArray ? matchArray[0] : ""
-    output = output.replace(/ /g,".")
-    let [day,mounth,year] = output.split(".")
-    output = [mounth,day,year].join(".")
-    return output 
-
+  prepareDate(date: string): string {
+    let matchArray = date.match(this.dateRegex);
+    let output = matchArray ? matchArray[0] : "";
+    output = output.replace(/ /g, ".");
+    let [day, mounth, year] = output.split(".");
+    output = [year, mounth, day].join("-");
+    return output;
   }
   prepareDatePassport(date: string): string {
-    console.log("data wejściowa :", date)
-    let matchArray = date.match(this.passportDataRegex)
-    let output = matchArray ? matchArray [0]: ""
-    return output
+    //console.log("data wejściowa :", date);
+    let matchArray = date.match(this.passportDataRegex);
+    let output = matchArray ? this.convertFormat(matchArray[0]) : "";
+    return output;
+  }
+  convertFormat(passportDate: string): string {
+    let matches = strSim.findBestMatch(
+      passportDate.substring(3, 10),
+      this.passportMonths
+    );
+    console.log(`WEJSCIE: ${passportDate} MATCHES:`, matches);
+    return matches.bestMatchIndex < 9
+      ? `${passportDate.substring(11, 15)}-0${matches.bestMatchIndex + 1}-${passportDate.substring(0,2)}`
+      : `${passportDate.substring(11, 15)}-${matches.bestMatchIndex + 1}-${passportDate.substring(0,2)}`;
   }
   async recogniseDowod(frontName: string, backName: string): Promise<Dowod> {
     const dowod: Dowod = {
@@ -161,7 +187,7 @@ class TesseractWorkers {
           );
           // const temp = text.match(this.dateRegex)
           //  temp ? temp[0] : "";
-          dowod.birthDate = this.prepareDate(text)
+          dowod.birthDate = this.prepareDate(text);
           //await this.workers[4].terminate();
           resolve("birthdateDone");
         } catch (error) {
@@ -196,7 +222,7 @@ class TesseractWorkers {
           // console.log("match: ", text.match(this.dateRegex))
           // const temp = text.match(this.dateRegex)
           //  temp ? temp[0] : "";
-          dowod.expiryDate = this.prepareDate(text)
+          dowod.expiryDate = this.prepareDate(text);
           //await this.workers[4].terminate();
           resolve("expirydateDone");
         } catch (error) {
@@ -240,7 +266,7 @@ class TesseractWorkers {
           );
           // const temp = text.match(this.dateRegex)
           //  temp? temp[0] : "";
-          dowod.issueDate = this.prepareDate(text)
+          dowod.issueDate = this.prepareDate(text);
           //await this.workers[4].terminate();
           resolve("issuedateDone");
         } catch (error) {
@@ -288,14 +314,13 @@ class TesseractWorkers {
           } = await this.workers[13].recognize(
             "temporary/" + backName.split(".")[0] + "/pesel.jpg"
           );
-          dowod.pesel = text;
+          dowod.pesel = this.prepareText(text);
           //await this.workers[4].terminate();
           resolve("peselDone");
         } catch (error) {
           reject(error);
         }
       }),
-      
     ];
     try {
       await Promise.all(Jobs);
@@ -310,7 +335,6 @@ class TesseractWorkers {
   // Paszport
   //////////////////////////////////////////////////////////////////
 
-  
   async recognisePaszport(passportName: string): Promise<Paszport> {
     const passport: Paszport = {
       names: "error",
@@ -340,7 +364,6 @@ class TesseractWorkers {
           } = await this.workers[0].recognize(
             "temporary/" + passportName.split(".")[0] + "/Names.jpg"
           );
-          console.log("jestem:Names")
           passport.names = this.prepareText(text);
           //await this.workers[0].terminate();
           resolve("namesDone");
@@ -358,7 +381,6 @@ class TesseractWorkers {
           } = await this.workers[1].recognize(
             "temporary/" + passportName.split(".")[0] + "/Surname.jpg"
           );
-          console.log("jestem Surname:")
           passport.surname = this.prepareText(text);
           //await this.workers[1].terminate();
           resolve("surnameDone");
@@ -376,7 +398,6 @@ class TesseractWorkers {
           } = await this.workers[2].recognize(
             "temporary/" + passportName.split(".")[0] + "/Type.jpg"
           );
-          console.log("jestem: Type")
           passport.type = this.prepareText(text);
           //await this.workers[2].terminate();
           resolve("familyNameDone");
@@ -394,7 +415,6 @@ class TesseractWorkers {
           } = await this.workers[3].recognize(
             "temporary/" + passportName.split(".")[0] + "/Code.jpg"
           );
-          console.log("jestem Code:")
           passport.code = this.prepareText(text);
           //await this.workers[3].terminate();
           resolve("parentsNameDone");
@@ -412,7 +432,6 @@ class TesseractWorkers {
           } = await this.workers[4].recognize(
             "temporary/" + passportName.split(".")[0] + "/Sex.jpg"
           );
-          console.log("jestem: Sex")
           passport.sex = text;
           //await this.workers[4].terminate();
           resolve("sexDone");
@@ -429,8 +448,7 @@ class TesseractWorkers {
           );
           // const temp = text.match(this.dateRegex)
           //  temp ? temp[0] : "";
-          console.log("jestem Birthdate:")
-           passport.birthDate = this.prepareDatePassport(text)
+          passport.birthDate = this.prepareDatePassport(text);
           //await this.workers[4].terminate();
           resolve("birthdateDone");
         } catch (error) {
@@ -447,7 +465,6 @@ class TesseractWorkers {
           } = await this.workers[6].recognize(
             "temporary/" + passportName.split(".")[0] + "/BirthPlace.jpg"
           );
-          console.log("jestem: BirthPlace")
           passport.birthPlace = this.prepareText(text);
           //await this.workers[4].terminate();
           resolve("birthplaceDone");
@@ -466,8 +483,7 @@ class TesseractWorkers {
           // console.log("match: ", text.match(this.dateRegex))
           // const temp = text.match(this.dateRegex)
           //  temp ? temp[0] : "";
-          console.log("jestem: ExpiryDate")
-          passport.expiryDate = this.prepareDatePassport(text)
+          passport.expiryDate = this.prepareDatePassport(text);
           //await this.workers[4].terminate();
           resolve("expirydateDone");
         } catch (error) {
@@ -481,7 +497,6 @@ class TesseractWorkers {
           } = await this.workers[8].recognize(
             "temporary/" + passportName.split(".")[0] + "/ID.jpg"
           );
-          console.log("jestem: ID")
           passport.id = text;
           //await this.workers[4].terminate();
           resolve("idDone");
@@ -496,7 +511,6 @@ class TesseractWorkers {
           } = await this.workers[9].recognize(
             "temporary/" + passportName.split(".")[0] + "/IssueAuthority.jpg"
           );
-          console.log("jestem: ISAuthority")
           passport.issuingAuthority = this.prepareText(text);
           //await this.workers[4].terminate();
           resolve("inssuingauthorityDone");
@@ -513,8 +527,7 @@ class TesseractWorkers {
           );
           // const temp = text.match(this.dateRegex)
           //  temp? temp[0] : "";
-          console.log("jestem: IsDate")
-          passport.issueDate = this.prepareDatePassport(text)
+          passport.issueDate = this.prepareDatePassport(text);
           //await this.workers[4].terminate();
           resolve("issuedateDone");
         } catch (error) {
@@ -528,7 +541,6 @@ class TesseractWorkers {
           } = await this.workers[11].recognize(
             "temporary/" + passportName.split(".")[0] + "/MRZ.jpg"
           );
-          console.log("jestem: MRZ")
           passport.MRZ = text;
           //await this.workers[4].terminate();
           resolve("MRZDone");
@@ -546,7 +558,6 @@ class TesseractWorkers {
           } = await this.workers[12].recognize(
             "temporary/" + passportName.split(".")[0] + "/Nationality.jpg"
           );
-          console.log("jestem: Nationality")
           passport.nationality = this.prepareText(text);
           //await this.workers[4].terminate();
           resolve("nationalityDone");
@@ -564,15 +575,13 @@ class TesseractWorkers {
           } = await this.workers[13].recognize(
             "temporary/" + passportName.split(".")[0] + "/Pesel.jpg"
           );
-          console.log("jestem: Pesel")
-          passport.pesel = text;
+          passport.pesel = this.prepareText(text);
           //await this.workers[4].terminate();
           resolve("peselDone");
         } catch (error) {
           reject(error);
         }
       }),
-      
     ];
     try {
       await Promise.all(Jobs);
@@ -583,5 +592,4 @@ class TesseractWorkers {
     }
   }
 }
-export default  new TesseractWorkers();
-
+export default new TesseractWorkers();

@@ -1,45 +1,111 @@
-import DowodOsobistyPL, { Dowod } from "../rec/dowodOsoistyPL";
+//TODO
+
 import { ValidationRules } from "./form-validation";
 import { parse } from "mrz";
 import mongoController from "../mongoController/mongoController";
+import { Paszport } from "../rec/paszportPL";
 
-export type DowodRules = Record<keyof Dowod, ValidationRules>;
+export type PaszportRules = Record<keyof Paszport, ValidationRules>;
 
-export default async function getDowodRules(): Promise<DowodRules> {
-  const rules = await getCurrentDowodRules();
-
+export default async function getPaszportRules(): Promise<PaszportRules> {
+  const rules = await getCurrentPaszportRules();
   return rules
     ? rules
     : {
         names: [generalRules.required, generalRules.onlyLetters],
         surname: [generalRules.required, generalRules.onlyLetters],
-        parentsNames: [generalRules.required, generalRules.onlyLetters],
-        birthDate: [generalRules.required, generalRules.isInFuture],
-        familyName: [generalRules.required, generalRules.onlyLetters],
-        sex: [generalRules.required, dowodRules.sexRules.sexCheck],
-        id: [generalRules.required, dowodRules.idRules.controlCheck],
+        birthDate: [
+          generalRules.required,
+          generalRules.isDate,
+          generalRules.isInFuture,
+          paszportRules.birthDateRules.isAdults,
+        ],
+        sex: [generalRules.required, paszportRules.sexRules.sexCheck],
+        id: [generalRules.required, paszportRules.idRules.controlCheck],
+        type: [generalRules.required],
+        code: [generalRules.required],
         pesel: [
           generalRules.required,
-          dowodRules.peselRules.lengthCheck,
-          dowodRules.peselRules.dateCheck,
-          dowodRules.peselRules.controlCheck,
+          paszportRules.peselRules.lengthCheck,
+          paszportRules.peselRules.dateCheck,
+          paszportRules.peselRules.controlCheck,
         ],
         nationality: [generalRules.required, generalRules.onlyLetters],
         birthPlace: [generalRules.required, generalRules.onlyLetters],
         issueDate: [
           generalRules.required,
           generalRules.isDate,
-          dowodRules.issueDateRules.isInBuissnesDay,
+          //paszportRules.issueDateRules.isBeforeExpiry,
+          paszportRules.issueDateRules.isInBuissnesDay,
           generalRules.isInFuture,
         ],
         issuingAuthority: [generalRules.required],
         expiryDate: [
           generalRules.required,
           generalRules.isDate,
-          dowodRules.expiryDateRules.expiryCheck,
+          paszportRules.expiryDateRules.expiryCheck,
         ],
-        MRZ: [generalRules.required, dowodRules.mrzRules.controlCheck],
+        MRZ: [generalRules.required, paszportRules.mrzRules.controlCheck],
       };
+}
+
+async function getCurrentPaszportRules(): Promise<PaszportRules | undefined> {
+  const mongo = new mongoController();
+
+  const currentRules = await mongo.getPaszportValidateRules();
+  if (!currentRules) return undefined;
+  return {
+    names: [generalRules.required, generalRules.onlyLetters],
+    surname: [generalRules.required, generalRules.onlyLetters],
+    birthDate: currentRules.isAdultsOnly
+      ? [
+          generalRules.required,
+          generalRules.isDate,
+          generalRules.isInFuture,
+          paszportRules.birthDateRules.isAdults,
+        ]
+      : [generalRules.required, generalRules.isInFuture],
+    sex: [generalRules.required, paszportRules.sexRules.sexCheck],
+    id: currentRules.isIDControl
+      ? [generalRules.required, paszportRules.idRules.controlCheck]
+      : [generalRules.required],
+    type: [generalRules.required],
+    code: [generalRules.required],
+    pesel: currentRules.isPeselControl
+      ? [
+          generalRules.required,
+          paszportRules.peselRules.lengthCheck,
+          paszportRules.peselRules.dateCheck,
+          paszportRules.peselRules.controlCheck,
+        ]
+      : [
+          generalRules.required,
+          paszportRules.peselRules.lengthCheck,
+          paszportRules.peselRules.dateCheck,
+        ],
+    nationality: [generalRules.required, generalRules.onlyLetters],
+    birthPlace: [generalRules.required, generalRules.onlyLetters],
+    issueDate: currentRules.isIssueDateCorrect
+      ? [
+          generalRules.required,
+          generalRules.isDate,
+          //paszportRules.issueDateRules.isBeforeExpiry,
+          paszportRules.issueDateRules.isInBuissnesDay,
+          generalRules.isInFuture,
+        ]
+      : [generalRules.required, generalRules.isDate],
+    issuingAuthority: [generalRules.required],
+    expiryDate: currentRules.isNotExpired
+      ? [
+          generalRules.required,
+          generalRules.isDate,
+          paszportRules.expiryDateRules.expiryCheck,
+        ]
+      : [generalRules.required, generalRules.isDate],
+    MRZ: currentRules.isMRZContol
+      ? [generalRules.required, paszportRules.mrzRules.controlCheck]
+      : [generalRules.required],
+  };
 }
 
 const generalRules = {
@@ -53,23 +119,22 @@ const generalRules = {
   isInFuture: (v: string) =>
     new Date(v) < new Date() || "Data wydania nie może być z przyszłości",
 };
-
-const dowodRules = {
+const paszportRules = {
   namesRules: {},
   surnameRules: {},
-  parentsNamesRules: {},
   birthDateRules: {
     isAdults: (v: string) =>
       yearBetween(new Date(v)) >= 18 || "Musisz mieć 18 lat",
   },
-  familyNameRules: {},
   sexRules: {
-    sexCheck: (v: string) => /[KM]/.test(v) || "K - Kobieta M - Mężczyzna",
+    sexCheck: (v: string) => /[FM]/.test(v) || "F - Kobieta M - Mężczyzna",
   },
   idRules: {
     controlCheck: (v: string) =>
-      isValidSeriaDowodu(v) || "Nieprawidłowy numer dowodu",
+      isValidNumerPaszportu(v) || "Nieprawidłowy numer Paszportu",
   },
+  typeRules: {},
+  codeRules: {},
   peselRules: {
     lengthCheck: (v: string) =>
       /^[0-9]{11}$/.test(v) || "Numer Pesel musi zawierać 11 cyfr",
@@ -105,8 +170,8 @@ const dowodRules = {
       new Date(v).getDay() % 6 !== 0 ||
       "Dokument nie mógł zostać wydany w sobotę ani w niedzielę",
     // isBeforeExpiry: (v:string) =>
-    //   !this.dowod.expiryDate ||
-    //   new Date(v) < new Date(this.dowod.expiryDate) ||
+    //   !this.passport.expiryDate ||
+    //   new Date(v) < new Date(this.passport.expiryDate) ||
     //   "Data wydania nie może być późniejsza niż termin ważności",
   },
   issuingAuthorityRules: {},
@@ -121,7 +186,9 @@ const dowodRules = {
   mrzRules: {
     controlCheck: (v: string) => {
       try {
+        console.log("test : ", v)
         const res = parse(v.trim().split("\n"));
+        console.log("sekcja MRZ: ",res);
         return res.valid || "Niepoprawna sekcja MRZ";
       } catch {
         return "Niepoprawna sekcja MRZ";
@@ -129,7 +196,6 @@ const dowodRules = {
     },
   },
 };
-
 function getValueFromLetter(letter: string) {
   const values = [
     "0",
@@ -174,81 +240,24 @@ function getValueFromLetter(letter: string) {
       return i;
     }
   }
+  if (letter === "<") return 0;
   return -1;
 }
-function isValidSeriaDowodu(v: string) {
-  const seriaDigits = v.toUpperCase().replace(/ /g, "");
-  console.log("seriaTrim :", seriaDigits);
+function isValidNumerPaszportu(v: string) {
+  const numerDigits = v.toUpperCase().replace(/ /g, "");
   let sum =
-    (7 * getValueFromLetter(seriaDigits[0]) +
-      3 * getValueFromLetter(seriaDigits[1]) +
-      1 * getValueFromLetter(seriaDigits[2]) +
-      7 * getValueFromLetter(seriaDigits[4]) +
-      3 * getValueFromLetter(seriaDigits[5]) +
-      1 * getValueFromLetter(seriaDigits[6]) +
-      7 * getValueFromLetter(seriaDigits[7]) +
-      3 * getValueFromLetter(seriaDigits[8])) %
+    (7 * getValueFromLetter(numerDigits[0]) +
+      3 * getValueFromLetter(numerDigits[1]) +
+      // 1 * this.getValueFromLetter(numerDigits[2]) +
+      1 * getValueFromLetter(numerDigits[3]) +
+      7 * getValueFromLetter(numerDigits[4]) +
+      3 * getValueFromLetter(numerDigits[5]) +
+      1 * getValueFromLetter(numerDigits[6]) +
+      7 * getValueFromLetter(numerDigits[7]) +
+      3 * getValueFromLetter(numerDigits[8])) %
     10;
-  return sum === getValueFromLetter(seriaDigits[3]);
+  return sum === getValueFromLetter(numerDigits[2]);
 }
-
-async function getCurrentDowodRules(): Promise<DowodRules | undefined> {
-  const mongo = new mongoController();
-
-  const currentRules = await mongo.getDowodValidateRules();
-  if (!currentRules) return undefined;
-  return {
-    names: [generalRules.required, generalRules.onlyLetters],
-    surname: [generalRules.required, generalRules.onlyLetters],
-    parentsNames: [generalRules.required, generalRules.onlyLetters],
-    birthDate: currentRules.isAdultsOnly
-      ? [
-          generalRules.required,
-          generalRules.isInFuture,
-          dowodRules.birthDateRules.isAdults,
-        ]
-      : [generalRules.required, generalRules.isInFuture],
-    familyName: [generalRules.required, generalRules.onlyLetters],
-    sex: [generalRules.required, dowodRules.sexRules.sexCheck],
-    id: currentRules.isIDControl
-      ? [generalRules.required, dowodRules.idRules.controlCheck]
-      : [generalRules.required],
-    pesel: currentRules.isPeselControl
-      ? [
-          generalRules.required,
-          dowodRules.peselRules.lengthCheck,
-          dowodRules.peselRules.dateCheck,
-          dowodRules.peselRules.controlCheck,
-        ]
-      : [
-          generalRules.required,
-          dowodRules.peselRules.lengthCheck,
-          dowodRules.peselRules.dateCheck,
-        ],
-    nationality: [generalRules.required, generalRules.onlyLetters],
-    birthPlace: [generalRules.required, generalRules.onlyLetters],
-    issueDate: currentRules.isIssueDateCorrect
-      ? [
-          generalRules.required,
-          generalRules.isDate,
-          dowodRules.issueDateRules.isInBuissnesDay,
-          generalRules.isInFuture,
-        ]
-      : [generalRules.required, generalRules.isDate],
-    issuingAuthority: [generalRules.required],
-    expiryDate: currentRules.isNotExpired
-      ? [
-          generalRules.required,
-          generalRules.isDate,
-          dowodRules.expiryDateRules.expiryCheck,
-        ]
-      : [generalRules.required, generalRules.isDate],
-    MRZ: currentRules.isMRZContol
-      ? [generalRules.required, dowodRules.mrzRules.controlCheck]
-      : [generalRules.required],
-  };
-}
-
 function yearBetween(oldDate: Date): Number {
   const today = new Date();
 

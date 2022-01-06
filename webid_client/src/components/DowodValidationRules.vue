@@ -2,7 +2,7 @@
   <v-form class="pt-1">
     <v-checkbox
       v-model="dowodValidationRules.isNotExpired"
-      label="Tylko dowody które nie utraciły ważności"
+      label="Tylko dowody, które nie utraciły ważności"
       :color="color"
     ></v-checkbox>
     <v-checkbox

@@ -20,10 +20,28 @@
               <v-icon>mdi-account-outline</v-icon>
             </v-btn>
           </template>
-          <v-card>
-            <v-card-title primary-title>{{this.$keycloak.tokenParsed['preferred_username']}}</v-card-title>
+          <v-card class="">
+            <v-card-title class="pa-3 py-2" primary-title>
+              <v-col cols="12" class="pa-0">
+                {{ this.$keycloak.tokenParsed["preferred_username"] }} 
+              </v-col>
+              <v-spacer></v-spacer>
+              <v-chip
+                v-if="
+                  $keycloak.resourceAccess['webid-client'].roles.includes(
+                    'admin'
+                  )
+                "
+                x-small
+              >
+                Administrator
+              </v-chip>
+              <v-spacer></v-spacer>
+            </v-card-title>
             <v-divider></v-divider>
-            <v-card-text justify-center>
+            <!-- <v-chip v-if="$keycloak.resourceAccess['webid-client'].roles.includes('user')">Użytkownik</v-chip> -->
+
+            <v-card-text justify-center  class="pt-3">
               <v-col cols="6" justify="center" class="pa-0"
                 ><v-btn plain @click="$router.push({ name: 'addDocument' })">
                   Dodaj Dokument
@@ -40,16 +58,25 @@
                 </v-btn></v-col
               >
               <v-col cols="12" class="px-0 pt-0 pb-3"
-                ><v-btn width="100%" color="green lighten-2" class="white--text" @click="accSettings">
+                ><v-btn
+                  width="100%"
+                  color="green lighten-2"
+                  class="white--text"
+                  @click="accSettings"
+                >
                   Zarządzaj kontem
                 </v-btn></v-col
               >
               <v-col cols="12" class="pa-0"
-                ><v-btn width="100%" color="green lighten-2" outlined @click="this.$keycloak.logout">
+                ><v-btn
+                  width="100%"
+                  color="green lighten-2"
+                  outlined
+                  @click="this.$keycloak.logout"
+                >
                   Wyloguj
                 </v-btn></v-col
               >
-
             </v-card-text>
           </v-card>
         </v-menu>
@@ -62,9 +89,9 @@
 export default {
   methods: {
     accSettings() {
-      window.location.href = `http://localhost:8070/auth/realms/WebID/account?referrer=${this.$keycloak.clientId}&referrer_uri=${window.location.href}`
-    }
-  }
+      window.location.href = `http://localhost:8070/auth/realms/WebID/account?referrer=${this.$keycloak.clientId}&referrer_uri=${window.location.href}`;
+    },
+  },
 };
 </script>
 
