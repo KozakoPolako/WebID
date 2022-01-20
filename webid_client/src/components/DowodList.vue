@@ -7,13 +7,13 @@
       class="my-3 px-2 text-h6"
       @click="redirectToAddDowod"
     >
-      Dodaj nowy Dowód
+      Dodaj nowy dowód
       <v-icon size="30">mdi-plus</v-icon>
     </v-btn>
     <v-row>
       <v-col v-for="dowod in items" :key="dowod.id" cols="12" lg="3" sm="6">
         <v-card class="pa-0 rounded-lg green">
-          <v-card-title class="py-1">Dowod:</v-card-title>
+          <v-card-title class="py-1">Dowod: {{ dowod.fullName}} <br >Termin ważności: {{ new Date(dowod.expairyDate).toLocaleDateString()}} <br > Numer dokumentu: {{dowod.docID}}</v-card-title>
           <v-card-text
             class="white rounded-lg pa-2 ml-2 dowod-img"
             @click="redirectToDowod(dowod.id)"
