@@ -85,6 +85,10 @@ router.post(
 
           const recordID = record?.insertedId.toString();
 
+          
+          fs.rmSync(req.file.path,{ recursive: true, force: true })
+          
+          fs.rmdirSync(`./temporary/${req.file.filename.split(".")[0] }`, { recursive: true } )
           res.status(200).json({
             passport: temp,
             id: recordID,

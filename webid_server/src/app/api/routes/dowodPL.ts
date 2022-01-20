@@ -148,6 +148,15 @@ router.post(
             frontfilename,
             backfilename
           );
+          console.log(req.files)
+          // @ts-ignore
+          fs.rmSync(req.files[0].path,{ recursive: true, force: true })
+          // @ts-ignore
+          fs.rmSync(req.files[1].path,{ recursive: true, force: true })
+          // @ts-ignore
+          fs.rmdirSync(`./temporary/${req.files[0].filename.split(".")[0] }`, { recursive: true, force: true } )
+          // @ts-ignore
+          fs.rmdirSync(`./temporary/${req.files[1].filename.split(".")[0] }`, { recursive: true, force: true } )
           const recordID = record?.insertedId.toString();
           res.status(200).json({
             dowod: temp,
@@ -156,6 +165,7 @@ router.post(
             frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${recordID}`,
             backURL: `${adress}/dokuments/pl/dowod/zdjecie/back/${recordID}`,
           });
+          
         } catch (e) {
           console.log(e);
           res.status(404).json({
@@ -227,6 +237,9 @@ router.get("/", keycloak.protect(), async (req, res, next) => {
         const id = v._id?.toString();
         return {
           id: id,
+          fullName: v.dataHistory[v.dataHistory.length - 1].documentData.surname + " " + v.dataHistory[v.dataHistory.length - 1].documentData.names,
+          expairyDate: v.dataHistory[v.dataHistory.length - 1].documentData.expiryDate,
+          docID: v.dataHistory[v.dataHistory.length - 1].documentData.id,
           frontURL: `${adress}/dokuments/pl/dowod/zdjecie/front/${id}`,
         };
       });

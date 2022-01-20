@@ -9,6 +9,7 @@ class TesseractWorkers {
     /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )(((0)[0-9])|((1)[0-2]))(\/|\.|\-|\ )\d{4}/;
   passportDataRegex =
     /([0-2][0-9]|(3)[0-1])(\/|\.|\-|\ )([A-Z]{3}\/[A-Z]{3})(\/|\.|\-|\ )\d{4}/;
+  dowodIDRegex = /[A-Z]{3}\ [0-9]{6}/;
   passportMonths = [
     "STY/JAN",
     "LUT/FEB",
@@ -42,11 +43,15 @@ class TesseractWorkers {
     }
     console.log("workers ready...");
   }
+  prepareIDDowod(text: string): string {
+    let matchArray = text.match(this.dowodIDRegex);
+    return matchArray ? matchArray[0] : "";
+  }
   prepareText(text: string): string {
     let output = text.replace(/\n/g, " ");
     output = output
       .split(" ")
-      .filter((val) => val.length >= 3)
+      .filter((val) => val.length >= 2)
       .join(" ");
     return output;
   }
@@ -236,7 +241,7 @@ class TesseractWorkers {
           } = await this.workers[8].recognize(
             "temporary/" + backName.split(".")[0] + "/id.jpg"
           );
-          dowod.id = text;
+          dowod.id = this.prepareIDDowod(text);
           //await this.workers[4].terminate();
           resolve("idDone");
         } catch (error) {

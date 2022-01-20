@@ -105,10 +105,10 @@ class Mongo {
       }
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.dowodsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dowody");
       this.usersCol = this.database.collection("uzytkownicy");
       this.photosBucket = new GridFSBucket(this.database, {
-        bucketName: "DowodPhotos",
+        bucketName: "DocumentPhoto",
       });
 
       const face = await this._uploadFile(
@@ -171,7 +171,7 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.dowodsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dowody");
 
       const filter = {
         _id: new ObjectID(id),
@@ -222,7 +222,7 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.dowodsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dowody");
 
       const doc = await this.dowodsCol.findOne<DowodPLDocument>({
         _id: new ObjectID(id),
@@ -240,7 +240,7 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.dowodsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dowody");
 
       const results = await this.dowodsCol.deleteOne({
         _id: new ObjectID(id),
@@ -259,7 +259,7 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.dowodsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dowody");
       this.usersCol = this.database.collection("uzytkownicy");
       if (user.isAdmin) {
         const documents = await this.dowodsCol.find({ saved: true }).toArray();
@@ -295,9 +295,9 @@ class Mongo {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
-      this.dowodsCol = this.database.collection("dokumenty");
+      this.dowodsCol = this.database.collection("dowody");
       this.photosBucket = new GridFSBucket(this.database, {
-        bucketName: "DowodPhotos",
+        bucketName: "DocumentPhoto",
       });
 
       const downloadStrem = this.photosBucket.openDownloadStream(id);
@@ -344,7 +344,7 @@ class Mongo {
       this.passportsCol = this.database.collection("paszporty");
       this.usersCol = this.database.collection("uzytkownicy");
       this.photosBucket = new GridFSBucket(this.database, {
-        bucketName: "DowodPhotos",
+        bucketName: "DocumentPhoto",
       });
       const face = await this._uploadFile(
         `./temporary/${photoName}/face.jpg`,
