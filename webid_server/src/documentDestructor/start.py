@@ -8,8 +8,6 @@ import os
 pathImage = sys.argv[1]
 mode = sys.argv[2]
 
-# outputDir = "documentDestructor/output/"
-
 outputDir = "temporary/"
 
 dowodRatio = 85.6/53.98

@@ -7,7 +7,6 @@ import Keycloak from "../auth/keycloak-config"
 import session from "express-session";
 import bearerToken from "express-bearer-token";
 
-const memoryStore = new session.MemoryStore();
 const keycloak = Keycloak.getKeycloak()
 if (!keycloak) {
   throw new Error("Keycloak init error")
@@ -26,7 +25,6 @@ app.use(session({
 app.use(keycloak.middleware())
 app.use(bearerToken())
 app.use(cors());
-app.use(express.static('temporary/'))
 app.use("/api/dokuments", dokuments);
 app.use("/api/ustawienia", ustawienia);
 

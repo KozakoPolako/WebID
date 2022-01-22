@@ -114,7 +114,6 @@ router.post(
   upload.array("dowodImage", 2),
   keycloak.protect("user"),
   async (req, res, next) => {
-    //console.log(req.files);
 
     if (!req.token) {
       res.status(401).json({
@@ -124,10 +123,6 @@ router.post(
       const user = new User(req.token);
       if (req.files && req.files.length == 2) {
         try {
-          var files = [];
-          var fileKeys = Object.keys(req.files);
-          //const file = fs.readFileSync("D:\\OneDrive - Wojskowa Akademia Techniczna\\Obrazy\\Praca Inżynierska zdj\\Dowod-Osobisty-2015.jpg");
-          // @ts-ignore
           const temp = await DowodOsobistyPL.getDocumentFromPhoto(
             // @ts-ignore
             req.files[0].path,
@@ -191,7 +186,8 @@ router.put(
     } else {
       authorized = false;
     }
-    if (authorized) {
+    if (authorized && req.token) {
+      const user = new User(req.token);
       const dowod: Dowod = req.body;
       const validation = await FormValidation.validateDowod(dowod);
 
@@ -199,7 +195,7 @@ router.put(
         try {
           const mongo = new mongoController();
 
-          await mongo.updateDocument(dowod, req.params.docID);
+          await mongo.updateDocument(dowod, req.params.docID, user.ID);
 
           res.status(200).json({
             message: "Udało się zapisać dokument",

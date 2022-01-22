@@ -102,6 +102,7 @@ export default {
         })
         .catch((error) => {
           console.log("error", error);
+          this.$toast.error("Nie udało się odczytać danych");
         })
         .finally(() => {
           this.recLoading = false;

@@ -26,6 +26,7 @@ enum Documents {
 
 interface documentData {
   documentData: Dowod | Paszport;
+  createdBy?: string;
   creationDate: Date;
 }
 
@@ -139,6 +140,7 @@ class Mongo {
         dataHistory: [
           {
             creationDate: new Date(),
+            createdBy: ownerID,
             documentData: doc,
           },
         ],
@@ -167,7 +169,7 @@ class Mongo {
       await this.client.close();
     }
   }
-  async updateDocument(doc: Dowod, id: string): Promise<void> {
+  async updateDocument(doc: Dowod, id: string, userID: string): Promise<void> {
     try {
       await this.client.connect();
       this.database = this.client.db("WebID");
@@ -180,6 +182,7 @@ class Mongo {
         $addToSet: {
           dataHistory: {
             creationDate: new Date(),
+            createdBy: userID, 
             documentData: doc,
           },
         },

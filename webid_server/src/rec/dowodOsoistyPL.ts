@@ -77,37 +77,14 @@ class DowodOsobistyPL {
     back: string
   ): Promise<Dowod> {
     const start = performance.now() 
-    // let names: string = "error";
-    // let surname: string = "error";
-    // let parentsNames: string = "error";
-    // let birthDate: string = "error";
-    // let familyName: string = "error";
-    // let sex: string = "error";
-    // let id: string = "error";
-    // let pesel: string = "error";
-    // let nationality: string = "error";
-    // let birthPlace: string = "error";
-    // let issueDate: string = "error";
-    // let issuingAuthority: string = "error";
-    // let expiryDate: string = "error";
-    // let MRZ :string = "error"
     try {
-      await destructDocument(front.toString(), "front", false);
+      await destructDocument(front, "front", false);
       await destructDocument(back, "back", false);
-
 
       const frontName = path.basename(front);
       const backName = path.basename(back);
       
-
       const dowod = await Workers.recogniseDowod(frontName,backName);
-
-      
-
-      // for (const key in dowod) {
-      //   // @ts-ignore
-      //   console.log(`${key}: \n ${dowod[key]}`) 
-      // }
 
       return dowod
     } catch (e) {
@@ -117,8 +94,6 @@ class DowodOsobistyPL {
       const end  = performance.now() 
       console.log(`Rozpoznawanie trwało:  ${(end - start)/1000} s`);
     }
-    
-    
     
   }
 }
