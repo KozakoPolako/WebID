@@ -8,7 +8,7 @@ const keycloakConfig = {
   bearerOnly: true,
   serverUrl: "http://localhost:8070/auth",
   realm: "WebID",
-  realmPublicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj1Bd/B36MZK9doY6F4QhzjXxf4Hp7PC3KXxu8X51LmqI6LIQG1+f3qey2iyt9718+/WwZIn+pQAGtazP4QSJr0YTWdWmBZm7a/HdgjGCdJO/hA5lTu6+II6BMa253CNW9z0nA79wvtuUZXWssB+BQYuW7H06Iz9acMFiEmp97KkL6PoaQlGtWStZZQZn1Ri2kvb/OH1RWPdp1aeQnThXI4487BayIC1O3/N7F9mWAqJDS+wp+G5bqVaDqfsBcojrvw1kYoxM1EuG3o6ByT9HffvmzeuwD+xLRikqsbJ7TR9ed+zzCdaHMMbUhXcuBSMirlifwbFB4yRquYQBdveYzQIDAQAB'
+  realmPublicKey: process.env.REALM_PUBLIC_KEY
 };
 
  class KeycloacConfig {
