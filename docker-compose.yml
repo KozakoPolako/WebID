@@ -63,6 +63,7 @@ services:
     environment:
       - MONGO_LOGIN=${WEBID_MONGO_USERNAME}
       - MONGO_PASSWORD=${WEBID_MONGO_PASSWORD}
+      - REALM_PUBLIC_KEY=${WEBID_REALM_PUBLIC_KEY}
     build: 
       context: "./webid_server"
       target: "dev-stage"
