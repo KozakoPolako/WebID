@@ -13,7 +13,7 @@
     <v-row>
       <v-col v-for="dowod in items" :key="dowod.id" cols="12" lg="3" sm="6">
         <v-card class="pa-0 rounded-lg green">
-          <v-card-title class="py-1">Dowod: {{ dowod.fullName}} <br >Termin ważności: {{ new Date(dowod.expairyDate).toLocaleDateString()}} <br > Numer dokumentu: {{dowod.docID}}</v-card-title>
+          <v-card-title class="py-1">Dowód: {{ dowod.fullName}} <br >Termin ważności: {{ new Date(dowod.expairyDate).toLocaleDateString()}} <br > Numer dokumentu: {{dowod.docID}}</v-card-title>
           <v-card-text
             class="white rounded-lg pa-2 ml-2 dowod-img"
             @click="redirectToDowod(dowod.id)"

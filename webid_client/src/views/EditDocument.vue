@@ -12,7 +12,7 @@
         <v-col cols="12" lg="9" xl="7">
           <v-row dense justify="end" align="center">
             <v-col cols="auto" :class="$vuetify.breakpoint.lgAndUp ?  '' : 'd-none'">
-              <h2 v-if="$route.params.docType === 'dowod'" >Dowod: {{ titleText }}</h2>
+              <h2 v-if="$route.params.docType === 'dowod'" >Dowód: {{ titleText }}</h2>
               <h2 v-else>Paszport: {{ titleText }}</h2>
             </v-col>
             <v-spacer />
