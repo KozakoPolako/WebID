@@ -36,7 +36,7 @@ docker compose up --build
 ```
 ## PL:  
 
-Aplikacja internetowa do pozyskania i weryfikacji dokumentów tożsamości
+Aplikacja internetowa do pozyskania i weryfikacji dokumentów tożsamości (Praca dyplomowa)
 
 ### Diagram architektury systemu:
 ![Diagram architekrury systemu drawio](https://user-images.githubusercontent.com/79322668/156199463-662b9f58-64a4-487c-a614-d2247f918e11.png)
